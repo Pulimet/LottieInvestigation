@@ -20,6 +20,42 @@ try {
         fillFixes: 0
     };
 
+    // 0. Timeline Normalization (Fix Playback Issue)
+    let minIP = Infinity;
+    const processGlobalStats = (layers) => {
+        layers.forEach(l => {
+            if (l.ip < minIP) minIP = l.ip;
+        });
+    };
+    if (animation.layers) processGlobalStats(animation.layers);
+
+    // If animation starts late (e.g. > 15 frames), shift everything back
+    if (minIP > 15 && minIP !== Infinity) {
+        const shiftAmount = minIP;
+        const shiftLayer = (l) => {
+            l.ip -= shiftAmount;
+            l.op -= shiftAmount;
+            if (l.st !== undefined) l.st -= shiftAmount;
+        };
+
+        if (animation.layers) animation.layers.forEach(l => shiftLayer(l));
+        if (animation.assets) animation.assets.forEach(a => { if (a.layers) a.layers.forEach(l => shiftLayer(l)); });
+
+        // Adjust animation markers if any
+        if (animation.markers) {
+            animation.markers.forEach(m => {
+                m.tm -= shiftAmount;
+                m.dr -= shiftAmount;
+            });
+        }
+
+        // Adjust global in/out points
+        animation.ip = Math.max(0, animation.ip - shiftAmount);
+        animation.op -= shiftAmount;
+
+        console.log(`  [Fixed] Timeline shifted by ${shiftAmount} frames to start at 0.`);
+    }
+
     // Helper to traverse and fix
     function fixLayer(layer, pathVal = '') {
         const layerName = layer.nm || 'Unnamed Layer';
@@ -45,6 +81,28 @@ try {
         // Also check effects and shapes for nested expressions
         if (layer.ef) removeExpressions(layer.ef);
         if (layer.shapes) removeExpressions(layer.shapes);
+
+        // Fix Text Layer (RN Black Letters Issue)
+        if (layer.ty === 5 && layer.t && layer.t.d) {
+            try {
+                const textDoc = layer.t.d;
+                const firstKeyframe = textDoc.k ? (Array.isArray(textDoc.k) ? textDoc.k[0] : textDoc) : null;
+                if (firstKeyframe && firstKeyframe.s) {
+                    const fillColor = firstKeyframe.s.fc;
+                    if (fillColor && layer.t.a && Array.isArray(layer.t.a)) {
+                        layer.t.a.forEach(animator => {
+                            if (!animator.s) animator.s = {};
+                            if (animator.a && !animator.a.fc) {
+                                animator.a.fc = { a: 0, k: fillColor, ix: 0 };
+                                console.log(`  [Fixed] Injected Fill Color into Text Animator in "${layerName}"`);
+                            }
+                        });
+                    }
+                }
+            } catch (e) {
+                console.warn(`  [Warn] Failed to fix text layer "${layerName}"`, e);
+            }
+        }
 
 
         // 2. Process Effects (specifically Fill)
