@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lottie Viewer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"
+        referrerpolicy="no-referrer"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Lottie Viewer</h1>
+            <p>Drag & drop your Lottie JSON files here</p>
+        </header>
+
+        <div class="main-content-wrapper">
+            <aside id="layers-panel" class="glass-panel">
+                <div class="layers-header">
+                    <h3>Layers</h3>
+                    <span id="layer-count" class="badge">0</span>
+                </div>
+                <div id="layers-list" class="layers-list">
+                    <!-- Layer items will be injected here -->
+                    <div class="no-layers-msg">No files loaded</div>
+                </div>
+            </aside>
+
+            <main class="viewer-container" id="drop-zone">
+                <div id="lottie-player"></div>
+                <div class="empty-state" id="empty-state">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 16L12 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M9 11L12 8L15 11" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M22 15V19C22 20.6569 20.6569 22 19 22H5C3.34315 22 2 20.6569 2 19V15"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <p>Drop file here to view</p>
+                    <button id="browse-btn" class="secondary-btn">Browse Files</button>
+                    <input type="file" id="file-input" accept=".json" hidden>
+                </div>
+            </main>
+        </div>
+
+        <section class="controls-panel glass-panel">
+            <div class="control-row">
+                <button id="play-pause-btn" class="icon-btn" title="Play/Pause">
+                    <svg id="play-icon" viewBox="0 0 24 24" class="icon">
+                        <path fill="currentColor" d="M8 5v14l11-7z" />
+                    </svg>
+                    <svg id="pause-icon" viewBox="0 0 24 24" class="icon hidden">
+                        <path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                    </svg>
+                </button>
+                <div class="scrubber-container">
+                    <input type="range" id="scrubber" min="0" max="100" value="0" step="0.1">
+                </div>
+                <span id="frame-display" class="time-display">0 / 0</span>
+            </div>
+
+            <div class="control-row settings-row">
+                <div class="control-group">
+                    <label>Speed</label>
+                    <div class="speed-controls">
+                        <button class="speed-btn" data-speed="0.5">0.5x</button>
+                        <button class="speed-btn active" data-speed="1">1x</button>
+                        <button class="speed-btn" data-speed="2">2x</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Background</label>
+                    <div class="bg-controls">
+                        <button class="bg-btn dark active" data-bg="#1e1e1e" title="Dark"></button>
+                        <button class="bg-btn light" data-bg="#ffffff" title="Light"></button>
+                        <button class="bg-btn transparent" data-bg="transparent" title="Transparent"></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metadata-row" id="metadata-panel">
+                <div class="meta-item">
+                    <span class="label">Version</span>
+                    <span class="value" id="meta-version">-</span>
+                </div>
+                <div class="meta-item">
+                    <span class="label">Framerate</span>
+                    <span class="value" id="meta-fps">-</span>
+                </div>
+                <div class="meta-item">
+                    <span class="label">Dimensions</span>
+                    <span class="value" id="meta-dims">-</span>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
