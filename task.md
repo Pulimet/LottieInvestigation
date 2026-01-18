@@ -19,3 +19,4 @@
     - [x] Generate `js/files_bundle.js` <!-- id: 16 -->
     - [x] Update `index.html` to load bundle <!-- id: 17 -->
     - [x] Update `js/script.js` to use bundled data <!-- id: 18 -->
+- [x] Fix Google Translate Popup <!-- id: 19 -->
