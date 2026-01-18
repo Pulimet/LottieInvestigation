@@ -269,6 +269,50 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         console.log(`Updated color for layer ${layerData.nm} to ${color}`);
+
+        // Update JSON Data
+        if (currentAnimationData) {
+            const jsonLayer = currentAnimationData.layers.find(l => l.ind === layerData.ind);
+            if (jsonLayer) {
+                const lottieColor = hexToLottieColor(color);
+
+                // 1. Text Layers
+                if (jsonLayer.ty === 5 && jsonLayer.t && jsonLayer.t.d) {
+                    // Provide support for text docs
+                    const docs = jsonLayer.t.d.k;
+                    // k can be array of keyframes or just values. usually array.
+                    if (Array.isArray(docs)) {
+                        docs.forEach(frame => {
+                            if (frame.s) {
+                                frame.s.fc = [...lottieColor, 1]; // Fill
+                                frame.s.sc = [...lottieColor, 1]; // Stroke
+                                frame.s.sw = 0; // Ensure stroke width is handled if needed
+                            }
+                        });
+                    }
+                }
+
+                // 2. Shape Layers (Recursive)
+                if (jsonLayer.shapes) {
+                    updateShapesColor(jsonLayer.shapes, lottieColor);
+                }
+            }
+        }
+    }
+
+    function updateShapesColor(shapes, rgbColor) {
+        shapes.forEach(shape => {
+            if (shape.ty === 'fl' || shape.ty === 'st') { // Fill or Stroke
+                if (shape.c) {
+                    // Update k value. remove x (expression) if present to be safe
+                    shape.c.k = [...rgbColor, 1];
+                    delete shape.c.x;
+                }
+            }
+            if (shape.it) {
+                updateShapesColor(shape.it, rgbColor);
+            }
+        });
     }
 
     function toggleLayerVisibility(layerData, itemElement) {
@@ -336,6 +380,14 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 animation.renderer.renderFrame(null);
             } catch (e) { console.error('Error rendering frame:', e); }
+        }
+
+        // Update JSON Data
+        if (currentAnimationData) {
+            const jsonLayer = currentAnimationData.layers.find(l => l.ind === layerData.ind);
+            if (jsonLayer) {
+                jsonLayer.hd = isNowHidden;
+            }
         }
 
         // Update UI
@@ -461,4 +513,51 @@ document.addEventListener('DOMContentLoaded', () => {
         metaFps.textContent = data.fr ? Math.round(data.fr) : '-';
         metaDims.textContent = (data.w && data.h) ? `${data.w} x ${data.h}` : '-';
     }
+
+    // --- Export Logic ---
+
+    const downloadBtn = document.getElementById('download-btn');
+    downloadBtn.addEventListener('click', downloadExport);
+
+    function downloadExport() {
+        if (!currentAnimationData) {
+            alert('No animation loaded.');
+            return;
+        }
+
+        const dataStr = JSON.stringify(currentAnimationData, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'lottie_exported.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function hexToLottieColor(hex) {
+        // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+        const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+        hex = hex.replace(shorthandRegex, (m, r, g, b) => {
+            return r + r + g + g + b + b;
+        });
+
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? [
+            parseInt(result[1], 16) / 255,
+            parseInt(result[2], 16) / 255,
+            parseInt(result[3], 16) / 255
+        ] : [1, 1, 1]; // Default white
+    }
+
+    // Ensure we expose these helpers or integrate them into existing functions
+    // We need to override/hook into updateLayerColor and toggleLayerVisibility to update currentAnimationData
+
+    // Hooking into existing functions by redefining them or adding the logic there.
+    // Since I'm appending this code or replacing blocks, best to integrate in the original function definitions.
+    // However, the tool replaces blocks. I will update the definitions in place below.
+
 });

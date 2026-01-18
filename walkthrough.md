@@ -14,6 +14,11 @@ A color input has been added to the Layer List panel.
 ### 2. UI Improvements
 - **Wider Interface**: The viewer container has been widened to `1200px` to accommodate more controls and larger animations.
 
+### 3. JSON Export
+- **Download Button**: Added "Download Export" to the footer.
+- **Functionality**: Downloads `lottie_exported.json` containing all current modifications (Visibility and Colors).
+- **Logic**: The viewer now syncs your visual changes back to the internal JSON model, converting hex colors to Lottie's RGB format.
+
 ## Fixes Applied (via `fix_lottie.js`)
 
 | Component | Issue | Action Taken | Result |
@@ -25,12 +30,10 @@ A color input has been added to the Layer List panel.
 ## Verification
 1.  **Open `index.html`** in a browser.
 2.  **Load `lottie_fixed.json`**.
-3.  **Check UI**: The viewer should look wider.
-4.  **Check Color Picker**:
-    - Find the "YEARS OF CONNECTING" layer (Text).
-    - Click the color circle.
-    - Pick a color.
-    - The text should change color.
+3.  **UI**: Check width is 1200px.
+4.  **Edit**: Hide a layer and change a text color.
+5.  **Export**: Click "Download Export".
+6.  **Verify**: Load the *exported* file back into the viewer. It should retain the hidden state and new color.
 
 ## Deliverables
 - `lottie_fixed.json`: The patched file.
