@@ -14,33 +14,21 @@ We identified and fixed compatibility issues in `lottie.json` and added new inte
 ### 1. File Browser Sidebar [NEW]
 A new sidebar on the left lists available JSON files.
 - **Dynamic Access**: The viewer connects to the local server to see files in real-time.
-- **No Bundling Needed**: Simply adding a file to `json/` makes it visible instantly upon refresh.
+- **Refresh Icon**: A refresh button updates the list without reloading the page.
 
 ### 2. Layer Color Picker
-A color input has been added to the Layer List panel.
-- **Support**: Now supports both **Shape Layers** and **Text Layers**.
-- **Functionality**: Allows realtime tinting.
-- **Target**: Updates the `fill` and `stroke` of SVG elements (`path`, `g`, `text`).
+- **Functionality**: Allows realtime tinting of Shape and Text layers.
 
-### 3. UI Improvements
-- **Wider Interface**: The viewer container has been widened to `1200px`.
-- **Improved Layout**: The page is fully scrollable, and the analysis report appears in a separate card.
+### 3. Analysis & Auto-Fix Tools
+- **Analyze Button**: Scans the *current* animation for compatibility issues.
+- **Fix Button [NEW]**: Instantly fixes common issues in the currently loaded animation (in-memory).
+    - Removes **Expressions** (which cause crashes).
+    - Removes **Merge Paths** (unsupported on Android).
+    - Removes/Converts **Effects** (unsupported).
+- **Workflow**: Load -> Analyze -> Fix -> Download.
 
 ### 4. JSON Export
-- **Download Button**: Added "Download Export" to the footer.
-- **Functionality**: Downloads the modified JSON from the viewer.
-- **Filename**: Automatically names the file `[OriginalName]_exported.json`.
-
-### 5. Interactive Analysis
-- **Analyze Button**: Scans the *current* animation data for compatibility issues directly in the browser.
-
-## Fixes Applied (via `js/fix_lottie.js`)
-
-| Component | Issue | Action Taken | Result |
-| :--- | :--- | :--- | :--- |
-| **Expressions** | Unsupported Javascript logic | **Removed** `x` property from transform. | Baked values (`k`) are now used. |
-| **Merge Paths** | Android Crashes | **Removed** `mm` shape type. | Crashes prevented. |
-| **Effects (Fill)** | Unsupported Effect | **Removed**. | Effect is gone. |
+- **Download Button**: Downloads the current state of variables (fixed/modified) as a new JSON file.
 
 ## Verification
 > [!IMPORTANT]
@@ -49,13 +37,16 @@ A color input has been added to the Layer List panel.
 > 2.  Run: `node server.js`
 > 3.  Open Browser: `http://localhost:8000`
 
-1.  **File Sidebar**: You should see all files, including any new ones you drop into the `json/` folder.
-2.  **Click File**: It should load instantly.
-3.  **Analyze**: Click "Analyze".
-4.  **Edit & Export**: Colors and visibility changes should apply to the currently selected file.
+1.  **Load File**: Select `lottie.json`.
+2.  **Analyze**: Click "Analyze". Note the errors.
+3.  **Fix**: Click the green "Fix" button.
+    - Confirm the prompt.
+    - An alert will show what was fixed.
+    - The player reloads automatically.
+4.  **Re-Analyze**: Click "Analyze" again. Errors should be gone.
+5.  **Download**: Click "Download" to save the `_exported.json` version.
 
 ## Deliverables
 - `json/lottie_fixed.json`: The patched file.
-- `js/fix_lottie.js`: Script to re-apply fixes.
 - `server.js`: Development server.
 - `js/script.js` & `style.css`: Updated viewer.

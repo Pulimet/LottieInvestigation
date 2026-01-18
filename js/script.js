@@ -667,6 +667,150 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAnalysisReport(issues);
     }
 
+    // --- Fix Logic ---
+
+    const fixBtn = document.getElementById('fix-btn');
+    if (fixBtn) {
+        fixBtn.addEventListener('click', runAutoFix);
+    }
+
+    function runAutoFix() {
+        if (!currentAnimationData) {
+            alert('No animation loaded.');
+            return;
+        }
+
+        if (!confirm('This will modify the currently loaded animation in memory. You can then download the fixed version. Proceed?')) {
+            return;
+        }
+
+        // Deep copy to ensure we are working on a fresh state of the current data but modifying it
+        // actually we want to modify currentAnimationData so it reflects in the player and export
+
+        const fixStats = {
+            expressions: 0,
+            effectsRemoved: 0,
+            mergePathsRemoved: 0,
+            fillFixes: 0
+        };
+
+        try {
+            autoFixAnimation(currentAnimationData, fixStats);
+
+            // Reload Player
+            initLottie(currentAnimationData);
+
+            // Notify User
+            alert(`Fix Complete!\n\nExpressions Removed: ${fixStats.expressions}\nMerge Paths Removed: ${fixStats.mergePathsRemoved}\nEffects Removed/Fixed: ${fixStats.effectsRemoved}/${fixStats.fillFixes}\n\nThe player has been updated. Click "Download" to save the fixed file.`);
+
+            // Re-run analysis to show clean state
+            runAnalysis();
+
+        } catch (err) {
+            console.error('Error fixing animation:', err);
+            alert('An error occurred while fixing the animation.');
+        }
+    }
+
+    function autoFixAnimation(animation, stats) {
+
+        function fixLayer(layer) {
+            const layerName = layer.nm || 'Unnamed Layer';
+
+            // 1. Clean Expressions
+            function removeExpressions(obj) {
+                if (!obj || typeof obj !== 'object') return;
+
+                if (obj.hasOwnProperty('k') && obj.hasOwnProperty('x')) {
+                    delete obj.x;
+                    stats.expressions++;
+                }
+
+                Object.keys(obj).forEach(key => {
+                    removeExpressions(obj[key]);
+                });
+            }
+
+            if (layer.ks) removeExpressions(layer.ks);
+            if (layer.ef) removeExpressions(layer.ef);
+            if (layer.shapes) removeExpressions(layer.shapes);
+
+            // 2. Process Effects (specifically Fill)
+            if (layer.ef && layer.ef.length > 0) {
+                const newEffects = [];
+                layer.ef.forEach(effect => {
+                    const isFillEffect = effect.nm && effect.nm.toLowerCase().includes('fill');
+                    if (isFillEffect) {
+                        const colorProp = effect.ef ? effect.ef.find(p => p.nm === 'Color') : null;
+                        if (colorProp && colorProp.v) {
+                            try {
+                                if (applyColorToShape(layer.shapes, colorProp.v)) {
+                                    stats.fillFixes++;
+                                    stats.effectsRemoved++;
+                                    return; // Remove effect
+                                }
+                            } catch (e) { console.warn(e); }
+                        }
+                        stats.effectsRemoved++; // Remove anyway if unsupported
+                    } else {
+                        newEffects.push(effect);
+                    }
+                });
+                layer.ef = newEffects;
+            }
+
+            // 3. Process Shapes (Merge Paths)
+            if (layer.shapes) {
+                layer.shapes = filterShapes(layer.shapes);
+            }
+        }
+
+        function applyColorToShape(shapes, colorValue) {
+            if (!shapes) return false;
+            let applied = false;
+            for (const shape of shapes) {
+                if (shape.ty === 'fl') {
+                    // Update color k value
+                    if (!shape.c) shape.c = { a: 0, k: [1, 1, 1, 1] };
+                    shape.c.k = colorValue.k || colorValue; // Handle if wrapped
+                    // Ensure no expression
+                    if (shape.c.x) delete shape.c.x;
+                    applied = true;
+                }
+                if (shape.it) {
+                    if (applyColorToShape(shape.it, colorValue)) applied = true;
+                }
+            }
+            return applied;
+        }
+
+        function filterShapes(shapes) {
+            return shapes.filter(shape => {
+                if (shape.ty === 'mm') { // Merge Paths
+                    stats.mergePathsRemoved++;
+                    return false;
+                }
+                if (shape.it) {
+                    shape.it = filterShapes(shape.it);
+                }
+                return true;
+            });
+        }
+
+        // Traverse Layers
+        if (animation.layers) {
+            animation.layers.forEach(l => fixLayer(l));
+        }
+        // Traverse Assets
+        if (animation.assets) {
+            animation.assets.forEach(asset => {
+                if (asset.layers) {
+                    asset.layers.forEach(l => fixLayer(l));
+                }
+            });
+        }
+    }
+
     function analyzeAnimation(animation) {
         const issues = [];
 

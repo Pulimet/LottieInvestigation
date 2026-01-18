@@ -1,44 +1,36 @@
-# Implementation Plan - Dynamic File Access via Local Server
+# Implementation Plan - Fix Button
 
-To provide a fully dynamic view of the `json/` folder without manual bundling, we will switch to a Client-Server architecture.
+We will add a "Fix" button that runs the optimization logic (removing expressions, merge paths, etc.) directly on the loaded animation in the browser.
 
-## The Solution
-We will create a simple Node.js server that:
-1.  **Serves the App**: Hosts `index.html`, `js/`, `css/` files.
-2.  **Lists Files**: Provides an API endpoint `/api/files` that scans the `json/` directory in real-time.
-3.  **Serves JSON**: Allows fetching JSON files directly.
+## UI Changes
+- **File**: `index.html`
+- **Location**: Metadata row, next to "Analyze".
+- **Element**: `<button id="fix-btn" class="secondary-btn">Fix</button>`
 
-This removes the need for `files_bundle.js` and `generate_bundle.js`.
+## Logic Implementation
+- **File**: `js/script.js`
+- **Function**: `autoFixAnimation(animationData)`
+    - Port logic from `js/fix_lottie.js`:
+        - Remove expressions (`x` property).
+        - Remove Merge Paths (`ty === 'mm'`).
+        - Remove/convert unsupported Effects.
+    - **Return**: A modified copy of the animation data.
+- **Event Handler**:
+    - On Click:
+        - Clone `currentAnimationData`.
+        - Run `autoFixAnimation`.
+        - Update `currentAnimationData` with result.
+        - Reload player (`initLottie`).
+        - Show success message / alert ("Fixed X issues").
+        - (Optional) Re-run analysis automatically to show clean state.
 
-## Changes
-
-### 1. `server.js` [NEW]
-- A minimal Node.js server using built-in `http` and `fs` modules (no extra dependencies needed).
-- **Routes**:
-    - `/api/files`: Returns JSON array of filenames in `json/`.
-    - `/`: Serves `index.html`.
-    - `*.js`, `*.css`, `*.json`: Serves static files.
-
-### 2. `js/script.js`
-- **Remove**: Logic related to `window.LOTTIE_FILES`.
-- **Add**: `fetchFileList()` function that hits `/api/files`.
-- **Update**: `loadJsonFile(filename)` to `fetch('/json/' + filename)`.
-
-### 3. `index.html`
-- **Remove**: `<script src="js/files_bundle.js"></script>`.
-
-## Cleanup
-- Delete `js/files_bundle.js`.
-- Delete `js/generate_bundle.js`.
-
-## Workflow
-Instead of double-clicking `index.html`, the user will:
-1.  Run `node server.js` in the terminal.
-2.  Open `http://localhost:8000`.
+## Step-by-Step
+1.  **Update `index.html`**: Add the button.
+2.  **Update `js/script.js`**: Implement the fix logic and event listener.
 
 ## Verification
-- Start server.
-- Open browser.
-- Sidebar should show `input.json` and others.
-- Add a new file to `json/`.
-- Refresh browser -> New file appears instantly.
+1.  Load `lottie.json` (original).
+2.  Click "Analyze" -> Verify errors exist.
+3.  Click "Fix" -> Player reloads.
+4.  Click "Analyze" -> Verify errors are gone.
+5.  Click "Download" -> Verify filename is `[name]_exported.json` and content is fixed.

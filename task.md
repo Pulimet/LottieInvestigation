@@ -24,3 +24,7 @@
     - [x] Create `server.js` <!-- id: 21 -->
     - [x] Update `js/script.js` to fetch from API <!-- id: 22 -->
     - [x] Cleanup bundle files <!-- id: 23 -->
+    - [x] Add Refresh Button to File Browser <!-- id: 24 -->
+- [x] Implement "Fix" Button <!-- id: 25 -->
+    - [x] Add button to `index.html` <!-- id: 26 -->
+    - [x] Port logic from `js/fix_lottie.js` to `js/script.js` <!-- id: 27 -->
