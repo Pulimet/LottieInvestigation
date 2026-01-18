@@ -13,6 +13,7 @@ A color input has been added to the Layer List panel.
 
 ### 2. UI Improvements
 - **Wider Interface**: The viewer container has been widened to `1200px` to accommodate more controls and larger animations.
+- **Improved Layout**: The page is now fully scrollable, and the analysis report appears in a separate, detached card below the player.
 
 ### 3. JSON Export
 - **Download Button**: Added "Download Export" to the footer.
@@ -35,11 +36,8 @@ A color input has been added to the Layer List panel.
 
 ## Verification
 1.  **Open `index.html`**.
-2.  **Load `lottie.json`** (Original).
-3.  **Click "Analyze"**: You should see warnings about Effects, Text Layers, etc.
-4.  **Load `lottie_fixed.json`** (Fixed).
-5.  **Click "Analyze"**: The list should be cleaner.
-6.  **Export**: Edit a color, then download. The filename should be correct.
+2.  **Scroll**: Resize your window vertically. You should be able to scroll the page.
+3.  **Analyze**: Click "Analyze". The results should appear in a spaced-out card below the player, without squishing the interface.
 
 ## Deliverables
 - `lottie_fixed.json`: The patched file.

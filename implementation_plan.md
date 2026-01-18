@@ -1,53 +1,35 @@
-# Implementation Plan - Client-Side Lottie Analysis
+# Implementation Plan - Layout & Scrolling Improvements
 
-We will integrate the analysis logic from `analyze_lottie.js` directly into the web viewer, allowing users to scan their animation for compatibility issues.
+We will adjust the CSS to allow the page to scroll naturally and style the analysis results as a distinct, independent card.
 
-## User Interface Changes
-- **File**: `index.html`
-- **Change**: Add an "Analyze" button next to "Download Export".
-- **Change**: Add a new "Analysis Results" card section below the player to display the report.
+## Goals
+1.  **Enable Page Scroll**: Remove `overflow: hidden` from `body` and fixed heights from containers.
+2.  **Detached Analysis Card**: Ensure the analysis panel looks like a separate module that flows naturally below the main content without squishing it.
 
-## Logic Implementation
-- **File**: `script.js` (or a new module, but `script.js` is fine for this size)
-- **Goal**: Port the `checkLayer`, `checkShapes`, and traversal logic from `analyze_lottie.js`.
+## Proposed Changes
 
-### 1. Analysis Function (`analyzeAnimation(animationData)`)
-- Iterate through `animationData.layers` and `animation.assets`.
-- Checks to implement (parity with `analyze_lottie.js`):
-    - **Assets**: Large images/base64 checking.
-    - **Track Mattes**: `tt` property.
-    - **3D Layers**: `ddd` property.
-    - **Effects**: `ef` array.
-    - **Time Remapping**: `tm`.
-    - **Blending Modes**: `bm`.
-    - **Layer Styles**: `sy`.
-    - **Expressions**: Keyframe properties ending in `x`.
-    - **Text Layers**: `ty === 5`.
-    - **Merge Paths**: `ty === 'mm'`.
+### 1. `style.css` - Global & Layout
+- **`body`**: Remove `overflow: hidden` and `height: 100vh`. Allow `min-height: 100vh` for background but let content grow.
+- **`.app-container`**:
+    - Remove `height: 90vh`.
+    - Change to `min-height: 90vh` or just allow auto height with padding.
+    - Ensure it centers content but grows.
+- **`.main-content-wrapper`**: Ensure it wraps or flexes correctly. Currently `flex: 1` might try to fill a fixed parent. It should be flexible.
 
-### 2. UI Rendering (`renderAnalysisReport(issues)`)
-- Clear previous results.
-- If no issues: Show a success message ("No major issues found").
-- If issues: Render a list/table of issues.
-    - **Format**: `[Type] Layer Name: Message`
-    - Use color coding (Yellow/Red) for severity if possible (all seem to be warnings/errors).
-
-### 3. Integration
-- Button `click` event listener calling `analyzeAnimation(currentAnimationData)`.
-- **Note**: This runs on the *current* data, so it will reflect any visibility/color changes if they introduced new issues (unlikely for visibility/color, but good for verification).
+### 2. `style.css` - Analysis Panel
+- **`.analysis-panel`**:
+    - Ensure it has the same "Glass" style as other panels (unify with `.glass-panel` class if possible, or copy properties).
+    - Give it margin-top to separate it visually.
+    - Ensure internal scrolling (`max-height`) is preserved if the list is huge, *or* removing max-height if the user wants "whole page scrollable" to implies seeing everything. The user said "Analyzed data should be shown in sapareted card", so internal scroll is arguably better for a "card", but if they want "whole page scrollable", maybe they want the card to grow?
+    - **Decision**: Keep `max-height` for the *results list* inside the card, but let the card itself be part of the page flow.
+    - style `border-radius`, `background`, `backdrop-filter` to match `.glass-panel`.
 
 ## Step-by-Step
-1.  **Edit `index.html`**: Add Button and Results Container.
-2.  **Edit `style.css`**: Style the results container (card style, scrollable if long).
-3.  **Edit `script.js`**:
-    - Copy logic from `analyze_lottie.js`.
-    - Adapt `console.log` generic output to return an array of objects.
-    - Implement the UI rendering function.
+1.  **Modify `body`**: Remove scroll lock.
+2.  **Modify `.app-container`**: Remove fixed height, allow growth.
+3.  **Update `.analysis-panel`**: Add glassmorphism styles and ensure separation.
 
 ## Verification
-- Load `lottie.json` (original).
-- Click "Analyze".
-- Verify report matches the terminal output we saw earlier.
-- Load `lottie_fixed.json`.
-- Click "Analyze".
-- Verify report is clean (or has fewer issues).
+- Resize window height to be small -> Page should scroll.
+- Run Analysis -> Results appear below.
+- Check that opening results doesn't squish the player.
