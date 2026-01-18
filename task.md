@@ -14,7 +14,12 @@
     - [x] Style Analysis Panel as detached card <!-- id: 11 -->
 - [x] Restructure Project Folders (`js/`, `json/`) <!-- id: 12 -->
 - [x] Implement JSON File Browser Sidebar <!-- id: 13 -->
-- [x] Fix Google Translate Popup <!-- id: 19 -->
+- [x] Fix Google Translate Popup
+- [x] Refactor `script.js` into Modules <!-- id: 5 -->
+    - [x] Create module structure (11 files)
+    - [x] Update index.html
+    - [x] Verify functionality
+- [x] Create Project Documentation (README.md) <!-- id: 6 --> <!-- id: 19 -->
 - [-] Fix File Loading (Bundled Approach) <!-- id: 14 -->
     - [x] Create `js/generate_bundle.js` logic <!-- id: 15 -->
     - [x] Generate `js/files_bundle.js` <!-- id: 16 -->
