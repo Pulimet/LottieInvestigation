@@ -16,7 +16,8 @@ A color input has been added to the Layer List panel.
 
 ### 3. JSON Export
 - **Download Button**: Added "Download Export" to the footer.
-- **Functionality**: Downloads `lottie_exported.json` containing all current modifications (Visibility and Colors).
+- **Functionality**: Downloads the modified JSON.
+- **Filename**: Automatically names the file `[OriginalName]_exported.json`.
 - **Logic**: The viewer now syncs your visual changes back to the internal JSON model, converting hex colors to Lottie's RGB format.
 
 ## Fixes Applied (via `fix_lottie.js`)
@@ -33,7 +34,7 @@ A color input has been added to the Layer List panel.
 3.  **UI**: Check width is 1200px.
 4.  **Edit**: Hide a layer and change a text color.
 5.  **Export**: Click "Download Export".
-6.  **Verify**: Load the *exported* file back into the viewer. It should retain the hidden state and new color.
+6.  **Verify**: The downloaded file should be named `lottie_fixed_exported.json`.
 
 ## Deliverables
 - `lottie_fixed.json`: The patched file.

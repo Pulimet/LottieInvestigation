@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let totalFrames = 0;
     let isDraggingScrubber = false;
     let currentAnimationData = null;
+    let currentFileName = 'lottie.json';
 
     // --- Drag & Drop ---
 
@@ -70,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (files.length > 0) {
             const file = files[0];
             if (file.type === 'application/json' || file.name.endsWith('.json')) {
+                currentFileName = file.name;
                 loadLottieFile(file);
             } else {
                 alert('Please upload a valid JSON file.');
@@ -529,9 +531,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const blob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
 
+        const exportName = currentFileName.toLowerCase().endsWith('.json')
+            ? currentFileName.replace(/\.json$/i, '_exported.json')
+            : `${currentFileName}_exported.json`;
+
+        console.log(`Starting download for: ${exportName}`);
+
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'lottie_exported.json';
+        a.download = exportName;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
