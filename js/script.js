@@ -30,6 +30,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Dynamic loading via local server API
 
     const fileListElement = document.getElementById('file-list');
+    const refreshFilesBtn = document.getElementById('refresh-files-btn');
+
+    if (refreshFilesBtn) {
+        refreshFilesBtn.addEventListener('click', () => {
+            renderFileList();
+        });
+    }
 
     function renderFileList() {
         if (!fileListElement) return;

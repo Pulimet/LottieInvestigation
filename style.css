@@ -140,6 +140,24 @@ header p {
     color: var(--text-secondary);
 }
 
+.header-icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.header-icon-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+}
+
 .badge {
     background: rgba(255, 255, 255, 0.1);
     padding: 2px 8px;
