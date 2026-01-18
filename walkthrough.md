@@ -1,7 +1,7 @@
 # Walkthrough - Lottie Fixes & Features
 
 ## Overview
-We identified and fixed compatibility issues in `lottie.json` and added new features to the Lottie Viewer.
+We identified and fixed compatibility issues in `lottie.json` and added new interactive features to the Lottie Viewer.
 
 ## Features Added
 
@@ -20,6 +20,11 @@ A color input has been added to the Layer List panel.
 - **Filename**: Automatically names the file `[OriginalName]_exported.json`.
 - **Logic**: The viewer now syncs your visual changes back to the internal JSON model, converting hex colors to Lottie's RGB format.
 
+### 4. Interactive Analysis
+- **Analyze Button**: Added "Analyze" button to the footer.
+- **Functionality**: Scans the *current* animation data (including your changes) for compatibility issues.
+- **Reports**: Displays a list of warnings (Track Mattes, Effects, Expressions, etc.) directly in the UI.
+
 ## Fixes Applied (via `fix_lottie.js`)
 
 | Component | Issue | Action Taken | Result |
@@ -29,15 +34,15 @@ A color input has been added to the Layer List panel.
 | **Effects (Fill)** | Unsupported Effect | **Removed**. | Effect is gone. |
 
 ## Verification
-1.  **Open `index.html`** in a browser.
-2.  **Load `lottie_fixed.json`**.
-3.  **UI**: Check width is 1200px.
-4.  **Edit**: Hide a layer and change a text color.
-5.  **Export**: Click "Download Export".
-6.  **Verify**: The downloaded file should be named `lottie_fixed_exported.json`.
+1.  **Open `index.html`**.
+2.  **Load `lottie.json`** (Original).
+3.  **Click "Analyze"**: You should see warnings about Effects, Text Layers, etc.
+4.  **Load `lottie_fixed.json`** (Fixed).
+5.  **Click "Analyze"**: The list should be cleaner.
+6.  **Export**: Edit a color, then download. The filename should be correct.
 
 ## Deliverables
 - `lottie_fixed.json`: The patched file.
 - `fix_lottie.js`: Script to re-apply fixes.
-- `analyze_lottie.js`: Script to check for issues.
+- `analyze_lottie.js`: Script to check for issues (Node.js version).
 - `script.js` & `style.css`: Updated viewer with features.

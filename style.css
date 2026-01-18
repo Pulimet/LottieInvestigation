@@ -435,3 +435,60 @@ input[type=range]::-webkit-slider-runnable-track {
     border-radius: 50%;
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
+/* Analysis Panel */
+.analysis-panel {
+    background-color: var(--panel-bg);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+}
+
+.analysis-panel h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 16px;
+    color: var(--text-color);
+}
+
+.analysis-item {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 14px;
+}
+
+.analysis-item:last-child {
+    border-bottom: none;
+}
+
+.analysis-item.warning {
+    border-left: 4px solid #ffcc00;
+    background-color: rgba(255, 204, 0, 0.1);
+}
+
+.analysis-item.error {
+    border-left: 4px solid #ff4444;
+    background-color: rgba(255, 68, 68, 0.1);
+}
+
+.analysis-type {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.analysis-layer {
+    font-family: monospace;
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.analysis-success {
+    color: #4caf50;
+    padding: 10px;
+    text-align: center;
+}

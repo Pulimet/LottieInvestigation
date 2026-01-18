@@ -1,66 +1,53 @@
-# Implementation Plan - Lottie JSON Export
+# Implementation Plan - Client-Side Lottie Analysis
 
-We will add functionality to export the modified Lottie JSON, preserving visibility and color changes made in the viewer.
+We will integrate the analysis logic from `analyze_lottie.js` directly into the web viewer, allowing users to scan their animation for compatibility issues.
 
 ## User Interface Changes
 - **File**: `index.html`
-- **Change**: Add a "Download JSON" button to the header or controls area.
-- **File**: `style.css`
-- **Change**: Style the new button.
+- **Change**: Add an "Analyze" button next to "Download Export".
+- **Change**: Add a new "Analysis Results" card section below the player to display the report.
 
 ## Logic Implementation
-- **File**: `script.js`
-- **Goal**: Synchronize UI changes to `currentAnimationData` and implement export.
+- **File**: `script.js` (or a new module, but `script.js` is fine for this size)
+- **Goal**: Port the `checkLayer`, `checkShapes`, and traversal logic from `analyze_lottie.js`.
 
-### 1. Synchronizing Changes
-We need to update the source JSON (`currentAnimationData`) whenever the user interacts with the UI.
+### 1. Analysis Function (`analyzeAnimation(animationData)`)
+- Iterate through `animationData.layers` and `animation.assets`.
+- Checks to implement (parity with `analyze_lottie.js`):
+    - **Assets**: Large images/base64 checking.
+    - **Track Mattes**: `tt` property.
+    - **3D Layers**: `ddd` property.
+    - **Effects**: `ef` array.
+    - **Time Remapping**: `tm`.
+    - **Blending Modes**: `bm`.
+    - **Layer Styles**: `sy`.
+    - **Expressions**: Keyframe properties ending in `x`.
+    - **Text Layers**: `ty === 5`.
+    - **Merge Paths**: `ty === 'mm'`.
 
-*   **Visibility (`toggleLayerVisibility`)**:
-    *   Update `layer.hd` in the JSON data.
-    *   `currentAnimationData.layers.find(l => l.ind === layerData.ind).hd = isHidden`
+### 2. UI Rendering (`renderAnalysisReport(issues)`)
+- Clear previous results.
+- If no issues: Show a success message ("No major issues found").
+- If issues: Render a list/table of issues.
+    - **Format**: `[Type] Layer Name: Message`
+    - Use color coding (Yellow/Red) for severity if possible (all seem to be warnings/errors).
 
-*   **Color (`updateLayerColor`)**:
-    *   This requires a new helper `applyColorToJson(layer, hexColor)`.
-    *   **Hex to RGB conversion**: Lottie uses normalized RGB [0-1, 0-1, 0-1].
-    *   **Shape Layers (`ty: 4`)**:
-        *   Traverse `shapes`.
-        *   Find `ty: 'fl'` (Fill) and `ty: 'st'` (Stroke).
-        *   Update `c.k` to the new RGB array.
-    *   **Text Layers (`ty: 5`)**:
-        *   Access `layer.t.d.k` (Document Data).
-        *   Iterate keyframes (usually just one).
-        *   Update `s.fc` (Fill Color) and `s.sc` (Stroke Color) with the new RGB array.
-
-### 2. Export Functionality
-*   **Function**: `downloadJson()`
-*   Create a `Blob` from `currentAnimationData`.
-*   Trigger a browser download for `lottie_exported.json`.
-
-## Helper Functions needed
-```javascript
-function hexToLottieColor(hex) {
-    // #RRGGBB -> [r/255, g/255, b/255, 1]
-}
-
-function updateJsonLayerColor(layerIndex, hexColor) {
-    // Find layer in currentAnimationData
-    // Recursive traversal for shapes
-    // Update text data
-}
-```
+### 3. Integration
+- Button `click` event listener calling `analyzeAnimation(currentAnimationData)`.
+- **Note**: This runs on the *current* data, so it will reflect any visibility/color changes if they introduced new issues (unlikely for visibility/color, but good for verification).
 
 ## Step-by-Step
-1.  **Edit `index.html`**: Insert button.
-2.  **Edit `script.js`**:
-    - Add `hexToLottieColor`.
-    - Add `updateJsonLayerColor` (handles Shapes and Text).
-    - Modify `updateLayerColor` to call `updateJsonLayerColor`.
-    - Modify `toggleLayerVisibility` to update `layer.hd`.
-    - Add click listener for Download button.
+1.  **Edit `index.html`**: Add Button and Results Container.
+2.  **Edit `style.css`**: Style the results container (card style, scrollable if long).
+3.  **Edit `script.js`**:
+    - Copy logic from `analyze_lottie.js`.
+    - Adapt `console.log` generic output to return an array of objects.
+    - Implement the UI rendering function.
 
 ## Verification
-- Load file.
-- Hide a layer.
-- Change a color.
-- Click "Download".
-- Open the downloaded file in the viewer (or inspect in text editor) to verify attributes `hd` and `c.k`.
+- Load `lottie.json` (original).
+- Click "Analyze".
+- Verify report matches the terminal output we saw earlier.
+- Load `lottie_fixed.json`.
+- Click "Analyze".
+- Verify report is clean (or has fewer issues).

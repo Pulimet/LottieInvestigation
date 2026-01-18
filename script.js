@@ -568,4 +568,187 @@ document.addEventListener('DOMContentLoaded', () => {
     // Since I'm appending this code or replacing blocks, best to integrate in the original function definitions.
     // However, the tool replaces blocks. I will update the definitions in place below.
 
+    // --- Analysis Logic ---
+
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const analysisPanel = document.getElementById('analysis-panel');
+    const analysisResults = document.getElementById('analysis-results');
+
+    analyzeBtn.addEventListener('click', runAnalysis);
+
+    function runAnalysis() {
+        if (!currentAnimationData) {
+            alert('No animation loaded.');
+            return;
+        }
+
+        analysisResults.innerHTML = '';
+        analysisPanel.classList.remove('hidden');
+
+        const issues = analyzeAnimation(currentAnimationData);
+        renderAnalysisReport(issues);
+    }
+
+    function analyzeAnimation(animation) {
+        const issues = [];
+
+        // Check Assets
+        if (animation.assets) {
+            const imageAssets = animation.assets.filter(a => a.p && (a.p.includes('.png') || a.p.includes('.jpg') || a.p.includes('data:image')));
+            if (imageAssets.length > 0) {
+                issues.push({
+                    type: 'Assets',
+                    message: `Contains ${imageAssets.length} image assets. Ensure these are bundled correctly in React Native or encoded as Base64.`,
+                    severity: 'warning'
+                });
+            }
+        }
+
+        // Helper to check layers
+        function checkLayer(layer, path = '') {
+            const layerName = layer.nm || 'Unnamed Layer';
+            const layerPath = path ? `${path} > ${layerName}` : layerName;
+
+            // 1. Track Mattes
+            if (layer.tt) {
+                issues.push({
+                    type: 'Track Matte',
+                    layer: layerPath,
+                    message: `Uses Track Matte (tt: ${layer.tt}). Some matte modes (especially Luma) can be problematic on Android.`,
+                    severity: 'warning'
+                });
+            }
+
+            // 2. 3D Layers
+            if (layer.ddd) {
+                issues.push({
+                    type: '3D Layer',
+                    layer: layerPath,
+                    message: '3D Layer enabled. Partial support in React Native.',
+                    severity: 'warning'
+                });
+            }
+
+            // 3. Effects
+            if (layer.ef && layer.ef.length > 0) {
+                const effectNames = layer.ef.map(e => e.nm).join(', ');
+                issues.push({
+                    type: 'Effects',
+                    layer: layerPath,
+                    message: `Uses Effects: ${effectNames}. Most After Effects effects are NOT supported in React Native.`,
+                    severity: 'error'
+                });
+            }
+
+            // 4. Time Remapping
+            if (layer.tm) {
+                issues.push({
+                    type: 'Time Remapping',
+                    layer: layerPath,
+                    message: 'Uses Time Remapping. May have performance or rendering issues.',
+                    severity: 'warning'
+                });
+            }
+
+            // 5. Blending Modes
+            if (layer.bm && layer.bm !== 0) {
+                issues.push({
+                    type: 'Blending Mode',
+                    layer: layerPath,
+                    message: `Uses Blending Mode (bm: ${layer.bm}). My not be supported on all native platforms.`,
+                    severity: 'warning'
+                });
+            }
+
+            // 6. Layer Styles (sy)
+            if (layer.sy && layer.sy.length > 0) {
+                issues.push({
+                    type: 'Layer Styles',
+                    layer: layerPath,
+                    message: 'Uses Layer Styles (Drop Shadow, Inner Glow, etc.). These are generally NOT supported.',
+                    severity: 'error'
+                });
+            }
+
+            // 7. Expressions (Naive check)
+            const checkPropForExpression = (prop, context) => {
+                if (prop && prop.x) {
+                    issues.push({
+                        type: 'Expression',
+                        layer: layerPath,
+                        message: `Uses Expression in ${context}. Expressions cause performance issues and may break if not supported by the player.`,
+                        severity: 'error'
+                    });
+                }
+            };
+            if (layer.ks) {
+                ['o', 'r', 'p', 'a', 's'].forEach(k => checkPropForExpression(layer.ks[k], `Transform ${k}`));
+            }
+
+            // 8. Text Layers
+            if (layer.ty === 5) {
+                issues.push({
+                    type: 'Text Layer',
+                    layer: layerPath,
+                    message: 'Text Layer found. Ensure fonts are loaded (Glyphs) or text is converted to shapes.',
+                    severity: 'warning'
+                });
+            }
+
+            // 9. Merge Paths
+            if (layer.shapes) {
+                checkShapes(layer.shapes, layerPath);
+            }
+        }
+
+        function checkShapes(shapes, layerPath) {
+            shapes.forEach(shape => {
+                if (shape.ty === 'mm') {
+                    issues.push({
+                        type: 'Merge Paths',
+                        layer: layerPath,
+                        message: 'Uses Merge Paths. Not supported on many Android versions (requires API 19+).',
+                        severity: 'error'
+                    });
+                }
+                if (shape.it) {
+                    checkShapes(shape.it, layerPath);
+                }
+            });
+        }
+
+        if (animation.layers) {
+            animation.layers.forEach(l => checkLayer(l));
+        }
+
+        // Check Precomps contents
+        if (animation.assets) {
+            animation.assets.forEach(asset => {
+                if (asset.layers) {
+                    asset.layers.forEach(l => checkLayer(l, `Asset (${asset.id})`));
+                }
+            });
+        }
+
+        return issues;
+    }
+
+    function renderAnalysisReport(issues) {
+        if (issues.length === 0) {
+            analysisResults.innerHTML = '<div class="analysis-success">✅ No critical issues found!</div>';
+            return;
+        }
+
+        issues.forEach(issue => {
+            const item = document.createElement('div');
+            item.className = `analysis-item ${issue.severity}`;
+            item.innerHTML = `
+                <span class="analysis-type">[${issue.type}]</span>
+                ${issue.layer ? `<span class="analysis-layer">${issue.layer}</span>` : ''}
+                <span class="analysis-message">${issue.message}</span>
+            `;
+            analysisResults.appendChild(item);
+        });
+    }
+
 });
