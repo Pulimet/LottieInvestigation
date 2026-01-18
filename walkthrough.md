@@ -18,6 +18,7 @@ A new sidebar on the left lists available JSON files.
 
 ### 2. Layer Color Picker
 - **Functionality**: Allows realtime tinting of Shape, Text, **Precomp**, and **Solid** layers.
+- **Smart Detection**: automatically detects and displays the current color of the layer.
 - **Target**: Updates the `fill` and `stroke` of all SVG elements inside the layer or group.
 
 ### 3. Analysis & Auto-Fix Tools

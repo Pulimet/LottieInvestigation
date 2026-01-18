@@ -260,7 +260,8 @@ document.addEventListener('DOMContentLoaded', () => {
             let colorInputHtml = '';
             // Only add color picker for Shape (4), Text (5), Precomp (0), Solid (1)
             if (layer.ty === 4 || layer.ty === 5 || layer.ty === 0 || layer.ty === 1) {
-                colorInputHtml = `<input type="color" class="layer-color-picker" value="#ffffff" title="Change Color">`;
+                const initialColor = detectLayerColor(layer, currentAnimationData) || '#ffffff';
+                colorInputHtml = `<input type="color" class="layer-color-picker" value="${initialColor}" title="Current Color: ${initialColor}">`;
             }
 
             item.innerHTML = `
@@ -684,6 +685,71 @@ document.addEventListener('DOMContentLoaded', () => {
             parseInt(result[2], 16) / 255,
             parseInt(result[3], 16) / 255
         ] : [1, 1, 1]; // Default white
+    }
+
+    function lottieColorToHex(c) {
+        if (!Array.isArray(c) || c.length < 3) return null;
+        const r = Math.round(c[0] * 255);
+        const g = Math.round(c[1] * 255);
+        const b = Math.round(c[2] * 255);
+        return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+
+    function detectLayerColor(layer, animationData) {
+        try {
+            // 1. Solid Layer (ty=1): use 'sc' (hex string)
+            if (layer.ty === 1 && layer.sc) {
+                return layer.sc;
+            }
+
+            // 2. Shape Layer (ty=4): find first fill
+            if (layer.ty === 4 && layer.shapes) {
+                return detectShapeColor(layer.shapes);
+            }
+
+            // 3. Text Layer (ty=5): find fill color in document data
+            if (layer.ty === 5 && layer.t && layer.t.d) {
+                const doc = layer.t.d.k;
+                const firstFrame = Array.isArray(doc) ? doc[0] : doc;
+                if (firstFrame && firstFrame.s && firstFrame.s.fc) {
+                    return lottieColorToHex(firstFrame.s.fc);
+                }
+            }
+
+            // 4. Precomp Layer (ty=0): find first shape in asset
+            if (layer.ty === 0 && layer.refId && animationData.assets) {
+                const asset = animationData.assets.find(a => a.id === layer.refId);
+                if (asset && asset.layers) {
+                    for (const l of asset.layers) {
+                        const col = detectLayerColor(l, animationData);
+                        if (col) return col;
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Error detecting color', e);
+        }
+        return null;
+    }
+
+    function detectShapeColor(shapes) {
+        for (const s of shapes) {
+            if (s.ty === 'fl') {
+                // Return color. k can be [r,g,b,a] or keyframes
+                if (s.c && s.c.k) {
+                    const k = s.c.k;
+                    if (Array.isArray(k) && typeof k[0] === 'number') {
+                        return lottieColorToHex(k);
+                    }
+                    // Handle keyframes? Just take first value if possible (complex)
+                }
+            }
+            if (s.it) {
+                const c = detectShapeColor(s.it);
+                if (c) return c;
+            }
+        }
+        return null;
     }
 
     // Ensure we expose these helpers or integrate them into existing functions
