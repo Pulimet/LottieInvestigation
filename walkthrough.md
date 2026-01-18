@@ -4,7 +4,11 @@
 We identified and fixed compatibility issues in `lottie.json` and added new interactive features to the Lottie Viewer.
 
 ## Project Structure
-- `js/`: Application logic and scripts.
+- `js/`: Modularized application logic (ES Modules).
+    - `main.js`: Entry point.
+    - `player.js`: Lottie player logic.
+    - `layers_*.js`: Layer management.
+    - `analyze.js`, `fix.js`, `export.js`: Tools.
 - `json/`: Lottie animation files.
 - `index.html` & `style.css`: The Viewer UI.
 - `server.js`: Local development server (Required).
