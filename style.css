@@ -85,7 +85,7 @@ header p {
 }
 
 #layers-panel {
-    width: 250px;
+    width: 300px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -93,7 +93,7 @@ header p {
 }
 
 #files-panel {
-    width: 200px;
+    width: 230px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
