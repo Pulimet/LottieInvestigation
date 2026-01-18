@@ -17,7 +17,8 @@ A new sidebar on the left lists available JSON files.
 - **Refresh Icon**: A refresh button updates the list without reloading the page.
 
 ### 2. Layer Color Picker
-- **Functionality**: Allows realtime tinting of Shape and Text layers.
+- **Functionality**: Allows realtime tinting of Shape, Text, **Precomp**, and **Solid** layers.
+- **Target**: Updates the `fill` and `stroke` of all SVG elements inside the layer or group.
 
 ### 3. Analysis & Auto-Fix Tools
 - **Analyze Button**: Scans the *current* animation for compatibility issues.

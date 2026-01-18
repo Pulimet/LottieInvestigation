@@ -258,8 +258,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // NEW: Color logic
             let colorInputHtml = '';
-            // Only add color picker for Shape Layers (ty=4) or Text Layers (ty=5)
-            if (layer.ty === 4 || layer.ty === 5) {
+            // Only add color picker for Shape (4), Text (5), Precomp (0), Solid (1)
+            if (layer.ty === 4 || layer.ty === 5 || layer.ty === 0 || layer.ty === 1) {
                 colorInputHtml = `<input type="color" class="layer-color-picker" value="#ffffff" title="Change Color">`;
             }
 
@@ -324,29 +324,45 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Apply color to SVG paths
-        // This is a "brute force" tint. It updates fill and stroke.
-        // For more precision, we'd need to parse the shapes.
         const layerGroup = renderElement.layerElement;
-        const paths = layerGroup.querySelectorAll('path, g, text');
+        if (!layerGroup) {
+            console.warn('No layerElement found to tint.');
+            return;
+        }
+
+        // Expanded selector to include rect, circle, etc. for Solids and simple shapes
+        const paths = layerGroup.querySelectorAll('path, text, rect, circle, ellipse, line, polyline, polygon');
+
+        console.log(`Tinting ${paths.length} elements in ${layerData.nm}`);
 
         paths.forEach(p => {
-            // Check if it has a fill or stroke style/attribute before overriding
-            // Or just force it. forcing is easiest for "tint this layer".
+            const computed = getComputedStyle(p);
 
-            // Note: Lottie maps "Fill" to 'fill' attribute or style.
-            // We set it on the style to override attributes.
-            if (getComputedStyle(p).fill !== 'none') {
+            // Fill
+            // Check if it has a visible fill. 
+            // Some paths have fill="rgb(...)" attribute.
+            // Some have style="fill: ...".
+            // Some derive from group.
+
+            // We want to update it if it's NOT explicitly 'none'.
+            // However, SVG default fill is black. Lottie often sets it.
+            // Let's force it if it's not 'none'.
+            if (computed.fill !== 'none' && computed.fill !== 'transparent') {
                 p.style.fill = color;
             }
-            if (getComputedStyle(p).stroke !== 'none') {
+
+            // Stroke
+            if (computed.stroke !== 'none' && computed.stroke !== 'transparent' && computed.strokeWidth !== '0px') {
                 p.style.stroke = color;
             }
         });
 
-        // Also try to set on the group itself if it has properties
-        if (layerGroup.style) {
-            // layerGroup.style.fill = color; // usually paths handle it
-        }
+        // Fallback: If no paths found (maybe it's a simple shape?), try styling the group?
+        // Usually Lottie wraps everything in paths.
+
+        // Also try to force update JSON for immediate effect if possible? 
+        // No, can't easily re-render single layer without full internal update. 
+        // DOM override is the standard hack.
 
         console.log(`Updated color for layer ${layerData.nm} to ${color}`);
 
@@ -372,9 +388,40 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                // 2. Shape Layers (Recursive)
+                // 2. Shape Layers
                 if (jsonLayer.shapes) {
                     updateShapesColor(jsonLayer.shapes, lottieColor);
+                }
+
+                // 3. Precomp Layers
+                if (jsonLayer.ty === 0 && jsonLayer.refId) {
+                    const asset = currentAnimationData.assets.find(a => a.id === jsonLayer.refId);
+                    if (asset && asset.layers) {
+                        asset.layers.forEach(l => {
+                            // Recursively update shapes in asset layers
+                            if (l.shapes) {
+                                updateShapesColor(l.shapes, lottieColor);
+                            }
+                            // Also Text layers in asset
+                            if (l.ty === 5 && l.t && l.t.d) {
+                                const docs = l.t.d.k;
+                                if (Array.isArray(docs)) {
+                                    docs.forEach(frame => {
+                                        if (frame.s) {
+                                            frame.s.fc = [...lottieColor, 1];
+                                            frame.s.sc = [...lottieColor, 1];
+                                        }
+                                    });
+                                }
+                            }
+                        });
+                    }
+                }
+
+                // 4. Solid Layers (ty=1)
+                if (jsonLayer.ty === 1) {
+                    // Solid layers use 'sc' property: hex string like "#ffffff"
+                    jsonLayer.sc = color;
                 }
             }
         }
