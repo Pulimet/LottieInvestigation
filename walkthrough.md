@@ -10,22 +10,28 @@ We identified and fixed compatibility issues in `lottie.json` and added new inte
 
 ## Features Added
 
-### 1. Layer Color Picker
+### 1. File Browser Sidebar [NEW]
+A new sidebar on the left lists available JSON files.
+- **Offline Mode**: Files are bundled into `js/files_bundle.js` so they load instantly without a web server.
+- **Auto-List**: The viewer automatically lists all files present in the bundle.
+- **How to Update**: If you add new JSON files, run `node js/generate_bundle.js` to update the bundle.
+
+### 2. Layer Color Picker
 A color input has been added to the Layer List panel.
 - **Support**: Now supports both **Shape Layers** and **Text Layers**.
 - **Functionality**: Allows realtime tinting.
 - **Target**: Updates the `fill` and `stroke` of SVG elements (`path`, `g`, `text`).
 
-### 2. UI Improvements
+### 3. UI Improvements
 - **Wider Interface**: The viewer container has been widened to `1200px`.
 - **Improved Layout**: The page is fully scrollable, and the analysis report appears in a separate card.
 
-### 3. JSON Export
+### 4. JSON Export
 - **Download Button**: Added "Download Export" to the footer.
 - **Functionality**: Downloads the modified JSON from the viewer.
 - **Filename**: Automatically names the file `[OriginalName]_exported.json`.
 
-### 4. Interactive Analysis
+### 5. Interactive Analysis
 - **Analyze Button**: Scans the *current* animation data for compatibility issues directly in the browser.
 
 ## Fixes Applied (via `js/fix_lottie.js`)
@@ -37,13 +43,14 @@ A color input has been added to the Layer List panel.
 | **Effects (Fill)** | Unsupported Effect | **Removed**. | Effect is gone. |
 
 ## Verification
-1.  **Open `index.html`**.
-2.  **Load `json/lottie.json`**.
-3.  **Analyze**: Click "Analyze" to see report.
-4.  **Edit & Export**: Change colors, hide layers, then "Download Export".
+1.  **Open `index.html`** (Directly in browser, no server needed).
+2.  **File Sidebar**: You should see all 4 files listed.
+3.  **Click File**: It should load instantly with NO errors in the console.
+4.  **Edit**: Changes apply to the currently loaded file from the bundle.
 
 ## Deliverables
 - `json/lottie_fixed.json`: The patched file.
 - `js/fix_lottie.js`: Script to re-apply fixes.
-- `js/analyze_lottie.js`: Node.js analysis script.
+- `js/generate_bundle.js`: Script to rebuild file bundle.
+- `js/files_bundle.js`: Generated data file.
 - `js/script.js` & `style.css`: Updated viewer.

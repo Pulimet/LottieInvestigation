@@ -85,11 +85,42 @@ header p {
 }
 
 #layers-panel {
-    width: 280px;
+    width: 250px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     flex-shrink: 0;
+}
+
+#files-panel {
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.file-item {
+    padding: 10px 12px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    border-radius: 6px;
+    transition: var(--transition);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.file-item.active {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--accent);
+    border-left: 2px solid var(--accent);
 }
 
 .layers-header {
