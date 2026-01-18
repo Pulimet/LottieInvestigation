@@ -7,14 +7,14 @@ We identified and fixed compatibility issues in `lottie.json` and added new inte
 - `js/`: Application logic and scripts.
 - `json/`: Lottie animation files.
 - `index.html` & `style.css`: The Viewer UI.
+- `server.js`: Local development server (Required).
 
 ## Features Added
 
 ### 1. File Browser Sidebar [NEW]
 A new sidebar on the left lists available JSON files.
-- **Offline Mode**: Files are bundled into `js/files_bundle.js` so they load instantly without a web server.
-- **Auto-List**: The viewer automatically lists all files present in the bundle.
-- **How to Update**: If you add new JSON files, run `node js/generate_bundle.js` to update the bundle.
+- **Dynamic Access**: The viewer connects to the local server to see files in real-time.
+- **No Bundling Needed**: Simply adding a file to `json/` makes it visible instantly upon refresh.
 
 ### 2. Layer Color Picker
 A color input has been added to the Layer List panel.
@@ -43,14 +43,19 @@ A color input has been added to the Layer List panel.
 | **Effects (Fill)** | Unsupported Effect | **Removed**. | Effect is gone. |
 
 ## Verification
-1.  **Open `index.html`** (Directly in browser, no server needed).
-2.  **File Sidebar**: You should see all 4 files listed.
-3.  **Click File**: It should load instantly with NO errors in the console.
-4.  **Edit**: Changes apply to the currently loaded file from the bundle.
+> [!IMPORTANT]
+> **Running the Application**: You must run the server to view the app.
+> 1.  Open Terminal.
+> 2.  Run: `node server.js`
+> 3.  Open Browser: `http://localhost:8000`
+
+1.  **File Sidebar**: You should see all files, including any new ones you drop into the `json/` folder.
+2.  **Click File**: It should load instantly.
+3.  **Analyze**: Click "Analyze".
+4.  **Edit & Export**: Colors and visibility changes should apply to the currently selected file.
 
 ## Deliverables
 - `json/lottie_fixed.json`: The patched file.
 - `js/fix_lottie.js`: Script to re-apply fixes.
-- `js/generate_bundle.js`: Script to rebuild file bundle.
-- `js/files_bundle.js`: Generated data file.
+- `server.js`: Development server.
 - `js/script.js` & `style.css`: Updated viewer.

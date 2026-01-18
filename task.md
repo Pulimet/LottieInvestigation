@@ -14,9 +14,13 @@
     - [x] Style Analysis Panel as detached card <!-- id: 11 -->
 - [x] Restructure Project Folders (`js/`, `json/`) <!-- id: 12 -->
 - [x] Implement JSON File Browser Sidebar <!-- id: 13 -->
-- [x] Fix File Loading (CORS) & Browser Listing <!-- id: 14 -->
+- [x] Fix Google Translate Popup <!-- id: 19 -->
+- [-] Fix File Loading (Bundled Approach) <!-- id: 14 -->
     - [x] Create `js/generate_bundle.js` logic <!-- id: 15 -->
     - [x] Generate `js/files_bundle.js` <!-- id: 16 -->
     - [x] Update `index.html` to load bundle <!-- id: 17 -->
     - [x] Update `js/script.js` to use bundled data <!-- id: 18 -->
-- [x] Fix Google Translate Popup <!-- id: 19 -->
+- [x] Implement Local Server (Dynamic Approach) <!-- id: 20 -->
+    - [x] Create `server.js` <!-- id: 21 -->
+    - [x] Update `js/script.js` to fetch from API <!-- id: 22 -->
+    - [x] Cleanup bundle files <!-- id: 23 -->

@@ -1,48 +1,44 @@
-# Implementation Plan - Fix File Loading & Listing
+# Implementation Plan - Dynamic File Access via Local Server
 
-To resolve the "Failed to fetch" (CORS) error and ensure all files are listed, we will switch from `fetch()` to a bundled data approach.
+To provide a fully dynamic view of the `json/` folder without manual bundling, we will switch to a Client-Server architecture.
 
-## Strategy: Data Bundling
-Since the total size of JSON files is small (~1.3MB), we can wrap them into a JavaScript file (`js/files_bundle.js`) that defines a global variable. This avoids network requests entirely, bypassing CORS rules on local files systems.
+## The Solution
+We will create a simple Node.js server that:
+1.  **Serves the App**: Hosts `index.html`, `js/`, `css/` files.
+2.  **Lists Files**: Provides an API endpoint `/api/files` that scans the `json/` directory in real-time.
+3.  **Serves JSON**: Allows fetching JSON files directly.
+
+This removes the need for `files_bundle.js` and `generate_bundle.js`.
 
 ## Changes
 
-### 1. `js/files_bundle.js` (Generated)
-- **Format**:
-  ```javascript
-  window.LOTTIE_FILES = {
-      "lottie.json": { ...json content... },
-      "lottie_fixed.json": { ...json content... },
-      ...
-  };
-  ```
-- **Generation**: I will create a Node.js script `js/generate_bundle.js` to build this file automatically from the `json/` directory.
+### 1. `server.js` [NEW]
+- A minimal Node.js server using built-in `http` and `fs` modules (no extra dependencies needed).
+- **Routes**:
+    - `/api/files`: Returns JSON array of filenames in `json/`.
+    - `/`: Serves `index.html`.
+    - `*.js`, `*.css`, `*.json`: Serves static files.
 
-### 2. `index.html`
-- Include the bundle script *before* the main script.
-  ```html
-  <script src="js/files_bundle.js"></script>
-  <script src="js/script.js"></script>
-  ```
+### 2. `js/script.js`
+- **Remove**: Logic related to `window.LOTTIE_FILES`.
+- **Add**: `fetchFileList()` function that hits `/api/files`.
+- **Update**: `loadJsonFile(filename)` to `fetch('/json/' + filename)`.
 
-### 3. `js/script.js`
-- **Remove**: `KNOWN_FILES` array and `fetch` logic.
-- **Update**: `renderFileList` to keys of `window.LOTTIE_FILES`.
-- **Update**: `loadJsonFile` to simply access `window.LOTTIE_FILES[filename]`.
+### 3. `index.html`
+- **Remove**: `<script src="js/files_bundle.js"></script>`.
 
-## Helper Script
-- `js/generate_bundle.js`:
-    - Reads `json/` directory.
-    - Reads each `.json` file.
-    - Writes `js/files_bundle.js`.
+## Cleanup
+- Delete `js/files_bundle.js`.
+- Delete `js/generate_bundle.js`.
 
-## Step-by-Step
-1.  **Create Generator**: Write `js/generate_bundle.js`.
-2.  **Run Generator**: Execute it to create the initial bundle.
-3.  **Update `index.html`**: Add script tag.
-4.  **Update `js/script.js`**: Refactor loading logic.
+## Workflow
+Instead of double-clicking `index.html`, the user will:
+1.  Run `node server.js` in the terminal.
+2.  Open `http://localhost:8000`.
 
 ## Verification
-- Reload page (no server needed).
-- "Files" list should show ALL files (including `lottie_fixed_exported.json`).
-- Clicking a file should load it instantly (no fetch error).
+- Start server.
+- Open browser.
+- Sidebar should show `input.json` and others.
+- Add a new file to `json/`.
+- Refresh browser -> New file appears instantly.

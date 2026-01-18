@@ -27,62 +27,70 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentFileName = 'lottie.json';
 
     // File Browser Logic
-    // Uses window.LOTTIE_FILES populated by js/files_bundle.js
+    // Dynamic loading via local server API
 
     const fileListElement = document.getElementById('file-list');
 
     function renderFileList() {
         if (!fileListElement) return;
 
-        fileListElement.innerHTML = '';
+        fileListElement.innerHTML = '<div style="padding:10px; color:#888">Loading files...</div>';
 
-        // Check if bundle exists
-        if (!window.LOTTIE_FILES) {
-            fileListElement.innerHTML = '<div style="padding:10px; color:red">No files loaded (bundle missing)</div>';
-            return;
-        }
+        fetch('/api/files')
+            .then(response => {
+                if (!response.ok) throw new Error('API Error');
+                return response.json();
+            })
+            .then(files => {
+                fileListElement.innerHTML = '';
+                if (files.length === 0) {
+                    fileListElement.innerHTML = '<div style="padding:10px; color:#888">No files found</div>';
+                    return;
+                }
 
-        const files = Object.keys(window.LOTTIE_FILES);
+                files.forEach(filename => {
+                    const item = document.createElement('div');
+                    item.className = 'file-item';
+                    item.textContent = filename;
 
-        files.forEach(filename => {
-            const item = document.createElement('div');
-            item.className = 'file-item';
-            item.textContent = filename;
+                    if (filename === currentFileName) {
+                        item.classList.add('active');
+                    }
 
-            if (filename === currentFileName) {
-                item.classList.add('active');
-            }
+                    item.addEventListener('click', () => {
+                        loadJsonFile(filename);
+                    });
 
-            item.addEventListener('click', () => {
-                loadJsonFile(filename);
+                    fileListElement.appendChild(item);
+                });
+            })
+            .catch(err => {
+                console.error('Error fetching file list:', err);
+                fileListElement.innerHTML = '<div style="padding:10px; color:red">Error: Run server.js</div>';
             });
-
-            fileListElement.appendChild(item);
-        });
     }
 
     function loadJsonFile(filename) {
-        if (!window.LOTTIE_FILES || !window.LOTTIE_FILES[filename]) {
-            alert('File not found in bundle');
-            return;
-        }
-
         // Update UI
         currentFileName = filename;
         document.querySelectorAll('.file-item').forEach(el => {
             el.classList.toggle('active', el.textContent === filename);
         });
 
-        // Load Data (Synchronous)
-        try {
-            const data = window.LOTTIE_FILES[filename];
-            // Clone data to avoid mutating the original bundle reference during edits
-            currentAnimationData = JSON.parse(JSON.stringify(data));
-            initLottie(currentAnimationData);
-        } catch (err) {
-            console.error('Error loading file:', err);
-            alert(`Error loading ${filename}: ${err.message}`);
-        }
+        // Fetch File
+        fetch(`json/${filename}`)
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                currentAnimationData = data;
+                initLottie(data);
+            })
+            .catch(err => {
+                console.error('Error loading file:', err);
+                alert(`Error loading ${filename}: ${err.message}`);
+            });
     }
 
     // Initialize File List
