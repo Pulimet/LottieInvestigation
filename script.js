@@ -176,9 +176,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const isHidden = layer.hd === true;
 
+            // NEW: Color logic
+            let colorInputHtml = '';
+            // Only add color picker for Shape Layers (ty=4) or maybe others if desired.
+            if (layer.ty === 4) {
+                colorInputHtml = `<input type="color" class="layer-color-picker" value="#ffffff" title="Change Color">`;
+            }
+
             item.innerHTML = `
                 <svg class="layer-type-icon" viewBox="0 0 24 24" fill="currentColor"><path d="${iconPath}"/></svg>
                 <span class="layer-name" title="${layer.nm || 'Unnamed Layer'}">${layer.nm || 'Unnamed Layer'}</span>
+                ${colorInputHtml}
                 <button class="visibility-btn" title="Toggle Visibility">
                     ${getEyeIcon(!isHidden)}
                 </button>
@@ -195,6 +203,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 toggleLayerVisibility(layer, item);
             });
 
+            // Color Handler
+            const colorInput = item.querySelector('.layer-color-picker');
+            if (colorInput) {
+                colorInput.addEventListener('input', (e) => {
+                    e.stopPropagation();
+                    updateLayerColor(layer, e.target.value);
+                });
+                // Try to detect initial color? (Advanced, skipping for now, default is white/black)
+            }
+
             layersList.appendChild(item);
         });
     }
@@ -205,6 +223,52 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             return '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.94 17.94l-1.41 1.41-2.07-2.07c-1.42.64-3.03.96-4.96.96-4.65 0-8.65-3.26-10.5-7.5 1.15-2.64 3.39-4.78 6.09-5.96L3.06 2.73 4.47 1.32 17.94 17.94zM12 7c.2 0 .4.02.6.05L6.68 12.97c-.02-.19-.05-.39-.05-.6 0-2.92 2.7-5.32 5.37-5.37zM12 17c-1.12 0-2.16-.36-3.03-.97l2.45-2.45c.19.01.38.02.58.02 2.76 0 5-2.24 5-5 0-.2-.01-.39-.02-.58l2.45-2.45c.61.87.97 1.91.97 3.03 0 4.65-4.01 7.4-8.4 7.4z"/></svg>';
         }
+    }
+
+    function updateLayerColor(layerData, color) {
+        if (!animation || !animation.renderer || !animation.renderer.elements) return;
+
+        // Find the render element
+        let renderElement = null;
+        for (let i = 0; i < animation.renderer.elements.length; i++) {
+            const el = animation.renderer.elements[i];
+            if (el && el.data && el.data.ind === layerData.ind) {
+                renderElement = el;
+                break;
+            }
+        }
+
+        if (!renderElement || !renderElement.layerElement) {
+            console.warn('Render element or DOM node not found for layer color update.');
+            return;
+        }
+
+        // Apply color to SVG paths
+        // This is a "brute force" tint. It updates fill and stroke.
+        // For more precision, we'd need to parse the shapes.
+        const layerGroup = renderElement.layerElement;
+        const paths = layerGroup.querySelectorAll('path, g');
+
+        paths.forEach(p => {
+            // Check if it has a fill or stroke style/attribute before overriding
+            // Or just force it. forcing is easiest for "tint this layer".
+
+            // Note: Lottie maps "Fill" to 'fill' attribute or style.
+            // We set it on the style to override attributes.
+            if (getComputedStyle(p).fill !== 'none') {
+                p.style.fill = color;
+            }
+            if (getComputedStyle(p).stroke !== 'none') {
+                p.style.stroke = color;
+            }
+        });
+
+        // Also try to set on the group itself if it has properties
+        if (layerGroup.style) {
+            // layerGroup.style.fill = color; // usually paths handle it
+        }
+
+        console.log(`Updated color for layer ${layerData.nm} to ${color}`);
     }
 
     function toggleLayerVisibility(layerData, itemElement) {
