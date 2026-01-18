@@ -3,6 +3,11 @@
 ## Overview
 We identified and fixed compatibility issues in `lottie.json` and added new interactive features to the Lottie Viewer.
 
+## Project Structure
+- `js/`: Application logic and scripts.
+- `json/`: Lottie animation files.
+- `index.html` & `style.css`: The Viewer UI.
+
 ## Features Added
 
 ### 1. Layer Color Picker
@@ -12,35 +17,33 @@ A color input has been added to the Layer List panel.
 - **Target**: Updates the `fill` and `stroke` of SVG elements (`path`, `g`, `text`).
 
 ### 2. UI Improvements
-- **Wider Interface**: The viewer container has been widened to `1200px` to accommodate more controls and larger animations.
-- **Improved Layout**: The page is now fully scrollable, and the analysis report appears in a separate, detached card below the player.
+- **Wider Interface**: The viewer container has been widened to `1200px`.
+- **Improved Layout**: The page is fully scrollable, and the analysis report appears in a separate card.
 
 ### 3. JSON Export
 - **Download Button**: Added "Download Export" to the footer.
-- **Functionality**: Downloads the modified JSON.
+- **Functionality**: Downloads the modified JSON from the viewer.
 - **Filename**: Automatically names the file `[OriginalName]_exported.json`.
-- **Logic**: The viewer now syncs your visual changes back to the internal JSON model, converting hex colors to Lottie's RGB format.
 
 ### 4. Interactive Analysis
-- **Analyze Button**: Added "Analyze" button to the footer.
-- **Functionality**: Scans the *current* animation data (including your changes) for compatibility issues.
-- **Reports**: Displays a list of warnings (Track Mattes, Effects, Expressions, etc.) directly in the UI.
+- **Analyze Button**: Scans the *current* animation data for compatibility issues directly in the browser.
 
-## Fixes Applied (via `fix_lottie.js`)
+## Fixes Applied (via `js/fix_lottie.js`)
 
 | Component | Issue | Action Taken | Result |
 | :--- | :--- | :--- | :--- |
 | **Expressions** | Unsupported Javascript logic | **Removed** `x` property from transform. | Baked values (`k`) are now used. |
-| **Merge Paths** | Android Crashes | **Removed** `mm` shape type. | Crashes prevented, potential minor mask difference. |
+| **Merge Paths** | Android Crashes | **Removed** `mm` shape type. | Crashes prevented. |
 | **Effects (Fill)** | Unsupported Effect | **Removed**. | Effect is gone. |
 
 ## Verification
 1.  **Open `index.html`**.
-2.  **Scroll**: Resize your window vertically. You should be able to scroll the page.
-3.  **Analyze**: Click "Analyze". The results should appear in a spaced-out card below the player, without squishing the interface.
+2.  **Load `json/lottie.json`**.
+3.  **Analyze**: Click "Analyze" to see report.
+4.  **Edit & Export**: Change colors, hide layers, then "Download Export".
 
 ## Deliverables
-- `lottie_fixed.json`: The patched file.
-- `fix_lottie.js`: Script to re-apply fixes.
-- `analyze_lottie.js`: Script to check for issues (Node.js version).
-- `script.js` & `style.css`: Updated viewer with features.
+- `json/lottie_fixed.json`: The patched file.
+- `js/fix_lottie.js`: Script to re-apply fixes.
+- `js/analyze_lottie.js`: Node.js analysis script.
+- `js/script.js` & `style.css`: Updated viewer.

@@ -1,7 +1,7 @@
 # Task List - Lottie Investigation & Fixes
 
 - [x] Analyze `lottie.json` for issues <!-- id: 0 -->
-- [x] Fix `lottie.json` via script (`fix_lottie.js`) <!-- id: 1 -->
+- [x] Fix `lottie.json` via script (`js/fix_lottie.js`) <!-- id: 1 -->
 - [x] Add Layer Color Picker <!-- id: 2 -->
 - [x] Widen UI to 1200px <!-- id: 3 -->
 - [x] Enable Color Picker for Text Layers <!-- id: 4 -->
@@ -12,3 +12,4 @@
     - [x] Remove body scroll lock <!-- id: 9 -->
     - [x] Fix container height constraint <!-- id: 10 -->
     - [x] Style Analysis Panel as detached card <!-- id: 11 -->
+- [x] Restructure Project Folders (`js/`, `json/`) <!-- id: 12 -->
