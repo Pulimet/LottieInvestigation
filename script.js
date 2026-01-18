@@ -178,8 +178,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // NEW: Color logic
             let colorInputHtml = '';
-            // Only add color picker for Shape Layers (ty=4) or maybe others if desired.
-            if (layer.ty === 4) {
+            // Only add color picker for Shape Layers (ty=4) or Text Layers (ty=5)
+            if (layer.ty === 4 || layer.ty === 5) {
                 colorInputHtml = `<input type="color" class="layer-color-picker" value="#ffffff" title="Change Color">`;
             }
 
@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // This is a "brute force" tint. It updates fill and stroke.
         // For more precision, we'd need to parse the shapes.
         const layerGroup = renderElement.layerElement;
-        const paths = layerGroup.querySelectorAll('path, g');
+        const paths = layerGroup.querySelectorAll('path, g, text');
 
         paths.forEach(p => {
             // Check if it has a fill or stroke style/attribute before overriding

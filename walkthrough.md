@@ -1,12 +1,18 @@
 # Walkthrough - Lottie Fixes & Features
 
 ## Overview
-We identified and fixed compatibility issues in `lottie.json` and added a new feature to the Lottie Viewer.
+We identified and fixed compatibility issues in `lottie.json` and added new features to the Lottie Viewer.
 
-## Feature: Layer Color Picker
+## Features Added
+
+### 1. Layer Color Picker
 A color input has been added to the Layer List panel.
-- **Functionality**: Allows realtime tinting of Shape Layers.
-- **Target**: Updates the `fill` and `stroke` of the underlying SVG (viewer-only change, does not save to JSON).
+- **Support**: Now supports both **Shape Layers** and **Text Layers**.
+- **Functionality**: Allows realtime tinting.
+- **Target**: Updates the `fill` and `stroke` of SVG elements (`path`, `g`, `text`).
+
+### 2. UI Improvements
+- **Wider Interface**: The viewer container has been widened to `1200px` to accommodate more controls and larger animations.
 
 ## Fixes Applied (via `fix_lottie.js`)
 
@@ -19,12 +25,15 @@ A color input has been added to the Layer List panel.
 ## Verification
 1.  **Open `index.html`** in a browser.
 2.  **Load `lottie_fixed.json`**.
-3.  **Layers Panel**: Look for the color circle next to Shape Layers.
-4.  **Action**: Click the circle, pick a color (e.g., Red).
-5.  **Result**: The corresponding shape in the viewer should turn Red.
+3.  **Check UI**: The viewer should look wider.
+4.  **Check Color Picker**:
+    - Find the "YEARS OF CONNECTING" layer (Text).
+    - Click the color circle.
+    - Pick a color.
+    - The text should change color.
 
 ## Deliverables
 - `lottie_fixed.json`: The patched file.
 - `fix_lottie.js`: Script to re-apply fixes.
 - `analyze_lottie.js`: Script to check for issues.
-- `script.js` & `style.css`: Updated viewer to support color picking.
+- `script.js` & `style.css`: Updated viewer with features.

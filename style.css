@@ -35,7 +35,7 @@ body {
 
 .app-container {
     width: 100%;
-    max-width: 800px;
+    max-width: 1200px;
     height: 90vh;
     display: flex;
     flex-direction: column;
@@ -411,7 +411,9 @@ input[type=range]::-webkit-slider-runnable-track {
 .meta-item .value {
     color: var(--text-primary);
     font-weight: 500;
-}.layer-color-picker {
+}
+
+.layer-color-picker {
     -webkit-appearance: none;
     border: none;
     width: 20px;
