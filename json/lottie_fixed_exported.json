@@ -9,13 +9,6 @@
   "ddd": 0,
   "assets": [
     {
-      "id": "audio_0",
-      "u": "images/",
-      "p": "aud_0.mp3",
-      "e": 0,
-      "t": 2
-    },
-    {
       "id": "comp_0",
       "nm": "att_logo_sonic_hz_wh-on-alpha_16x9_4k",
       "fr": 30,
@@ -13003,19 +12996,6 @@
           "ip": 78.75,
           "op": 202,
           "st": 88.75,
-          "bm": 0
-        },
-        {
-          "ddd": 0,
-          "ind": 8,
-          "ty": 6,
-          "nm": "att_sonic_logo_audio_only_48-24.wav",
-          "cl": "wav",
-          "refId": "audio_0",
-          "sr": 1,
-          "ip": 0,
-          "op": 164,
-          "st": 0,
           "bm": 0
         }
       ]

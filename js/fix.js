@@ -116,36 +116,144 @@ function fixTextLayer(layer, stats) {
             layer.t.a.forEach(animator => {
                 if (!animator.s) animator.s = {};
 
-                // If the animator modifies properties but doesn't have Fill Color, add it.
-                // We mainly care if it doesn't have it.
-                if (!animator.s.fc) {
-                    // We add a Fill Color property to the animator style
-                    // However, Lottie animator style properties usually follow a specific structure
-                    // For 'fc' (Fill Color), it expects an iterator/value. 
-                    // Actually, in Text Animators, you add 'fc' to the 'a' (properties) object of the animator, 
-                    // NOT the 's' (selector).
-                    // Wait, let's check structure: layer.t.a[0].a (properties)
-
-                    if (animator.a) {
-                        if (!animator.a.fc) {
-                            // Inject Fill Color into the animator properties
-                            // Using the color from the text document
-                            animator.a.fc = {
-                                a: 0,
-                                k: fillColor,
-                                ix: 0 // Index might matter? 
-                            };
-                            if (!stats.textFixes) stats.textFixes = 0;
-                            stats.textFixes++;
-                        }
+                // 1. Fix Fill Color (RN Black Text)
+                if (animator.a) {
+                    if (!animator.a.fc) {
+                        animator.a.fc = {
+                            a: 0,
+                            k: fillColor,
+                            ix: 0
+                        };
+                        if (!stats.textFixes) stats.textFixes = 0;
+                        stats.textFixes++;
                     }
                 }
+
+                // 2. Fix Range Selector Units & Offset
+                if (animator.s && animator.s.o && animator.s.o.a === 1 && animator.s.o.k) {
+
+                    // A: Fix Units (Convert to Percentage)
+                    // React Native Lottie has trouble with Index Units (rn: 1) and small End values.
+                    // The most robust fix is to convert everything to Percentage (rn: 0, End: 100).
+
+                    let endVal = 100; // Default
+                    if (animator.s.e && typeof animator.s.e.k === 'number') {
+                        endVal = animator.s.e.k;
+                    }
+
+                    // If End is small (e.g. < 50), assume it was meant to be Indices (e.g. 3 words).
+                    // We convert it to 100% and scale the Offset/Start values.
+                    if (endVal < 50 && endVal > 0) {
+                        // REWRITE: Standard "Left-to-Right Reveal" (Percentage)
+                        // Instead of scaling potentially weird Offsets, we wipe the slate clean.
+                        // We set up a standard 0% -> 100% "Start" animation.
+                        // T0: Start 0, End 100 (Range 0-100% Selected) -> All Hidden.
+                        // T1: Start 100, End 100 (Range 100-100% Selected) -> Empty -> All Visible.
+
+                        // 1. Force Properties
+                        animator.s.rn = 0; // Percent
+                        animator.s.sh = 1; // Square
+                        // animator.s.b = 1; // Characters (Optional, but safe)
+
+                        if (!animator.s.e) animator.s.e = {};
+                        animator.s.e.a = 0;
+                        animator.s.e.k = 100; // End fixed at 100%
+
+                        // 2. Get Timing from existing Offset Keyframes
+                        let times = [];
+                        if (animator.s.o.k && Array.isArray(animator.s.o.k)) {
+                            // Extract T start/end from first two keyframes or just start/end of array
+                            const first = animator.s.o.k[0];
+                            const last = animator.s.o.k[animator.s.o.k.length - 1]; // or look for hold input
+                            // Simple assumption: 2 keyframes usually.
+                            if (first && typeof first.t === 'number') times.push(first.t);
+                            if (last && typeof last.t === 'number' && last !== first) times.push(last.t);
+                        }
+
+                        // Fallback timing if missing
+                        if (times.length < 2) {
+                            times = [layer.ip, layer.ip + 60]; // 1 second duration default?
+                        }
+
+                        // 3. Create Start Animation (0 -> 100)
+                        animator.s.s = {
+                            a: 1,
+                            ix: 4, // 'Start' property index
+                            k: [
+                                {
+                                    t: times[0],
+                                    s: [0],
+                                    i: { x: [0.833], y: [0.833] }, // Standard ease
+                                    o: { x: [0.167], y: [0.167] }
+                                },
+                                {
+                                    t: times[1],
+                                    s: [100]
+                                }
+                            ]
+                        };
+
+                        // 4. Kill Offset Animation (Set to 0)
+                        animator.s.o = {
+                            a: 0,
+                            k: 0,
+                            ix: 6
+                        };
+
+                        if (!stats.textFixes) stats.textFixes = 0;
+                        stats.textFixes++;
+                        // console.log(`[Fixed] Rewrote Animator to Standard Start Wipe (0->100%)`);
+                    }
+
+                    // B: Fix Negative Offset - REMOVED (Obsolete with rewrite)
+                }
+
             });
         }
     } catch (e) {
         console.warn('Error fixing text layer:', e);
     }
 }
+
+// Helper to update Text Layer IP based on Animator start
+// This fixes the "Shown Always" issue in RN by ensuring the layer doesn't exist 
+// before the animation actually starts.
+function syncTextLayerIP(layer, stats) {
+    if (layer.ty !== 5 || !layer.t || !layer.t.a) return;
+
+    try {
+        let minKeyitme = Infinity;
+        let hasAnimatedSelector = false;
+
+        layer.t.a.forEach(animator => {
+            // Check Range Selector Offset
+            if (animator.s && animator.s.o && animator.s.o.a === 1 && animator.s.o.k) {
+                animator.s.o.k.forEach(kf => {
+                    if (kf.t !== undefined && kf.t < minKeyitme) minKeyitme = kf.t;
+                });
+                hasAnimatedSelector = true;
+            }
+            // Check Range Selector Start/End if animated? Usually Offset is used for "write-on"
+        });
+
+        if (hasAnimatedSelector && minKeyitme !== Infinity) {
+            // If the layer starts significantly earlier than the animation, 
+            // clamp the layer start to the animation start.
+            // Using minKeyitme directly, or maybe -1 frame for safety.
+            // Current file: ip=6, anim=96. we want ip=96.
+            if (layer.ip < minKeyitme - 5) { // Threshold to avoid micro-adjustments
+                const oldIp = layer.ip;
+                layer.ip = minKeyitme;
+                if (!stats.ipFixes) stats.ipFixes = 0;
+                stats.ipFixes++;
+                // console.log(`[Fixed] Shifted Text Layer IP from ${oldIp} to ${layer.ip} to match animator.`);
+            }
+        }
+    } catch (e) {
+        console.warn('Error syncing text layer IP:', e);
+    }
+}
+
 
 function applyColorToShape(shapes, colorValue) {
     if (!shapes) return false;
