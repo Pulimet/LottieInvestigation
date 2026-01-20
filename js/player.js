@@ -34,6 +34,11 @@ export function initLottie(animationData) {
         updateFrameDisplay(frameDisplay);
     });
 
+    state.animation.addEventListener('complete', () => {
+        state.isPlaying = false;
+        updatePlayPauseIcon();
+    });
+
     const updateLoop = () => {
         if (state.animation && state.isPlaying && !state.isDraggingScrubber) {
             scrubber.value = state.animation.currentFrame;
@@ -46,10 +51,17 @@ export function initLottie(animationData) {
 
 export function togglePlay() {
     if (!state.animation) return;
-    if (state.isPlaying) state.animation.pause();
-    else state.animation.play();
-    state.isPlaying = !state.isPlaying;
-    updatePlayPauseIcon();
+    try {
+        if (state.isPlaying) state.animation.pause();
+        else state.animation.play();
+        state.isPlaying = !state.isPlaying;
+        updatePlayPauseIcon();
+    } catch (e) {
+        console.warn("Error toggling play/pause:", e);
+        // Fallback: Just toggle the state icon if the internal call failed but mostly to keep UI in sync
+        state.isPlaying = !state.isPlaying;
+        updatePlayPauseIcon();
+    }
 }
 
 export function toggleLoop() {
