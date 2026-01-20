@@ -7,12 +7,15 @@ export function fetchFileList() {
 
     fileListElement.innerHTML = '<div style="padding:10px; color:#888">Loading files...</div>';
 
+    const filesPanel = document.getElementById('files-panel');
+
     fetch('/api/files')
         .then(response => {
             if (!response.ok) throw new Error('API Error');
             return response.json();
         })
         .then(files => {
+            if (filesPanel) filesPanel.classList.remove('hidden'); // Show if success
             fileListElement.innerHTML = '';
             if (files.length === 0) {
                 fileListElement.innerHTML = '<div style="padding:10px; color:#888">No files found</div>';
@@ -47,8 +50,9 @@ export function fetchFileList() {
             });
         })
         .catch(err => {
-            console.error('Error fetching file list:', err);
-            fileListElement.innerHTML = '<div style="padding:10px; color:red">Error: Run server.js</div>';
+            console.error('Error fetching file list (server likely offline):', err);
+            // fileListElement.innerHTML = '<div style="padding:10px; color:red">Error: Run server.js</div>';
+            if (filesPanel) filesPanel.classList.add('hidden'); // Hide the panel entirely
         });
 }
 
