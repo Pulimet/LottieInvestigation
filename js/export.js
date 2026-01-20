@@ -6,7 +6,10 @@ export function downloadExport() {
         return;
     }
 
-    const dataStr = JSON.stringify(state.currentAnimationData, null, 2);
+    const minify = document.getElementById('minify-checkbox')?.checked;
+    const dataStr = minify
+        ? JSON.stringify(state.currentAnimationData)
+        : JSON.stringify(state.currentAnimationData, null, 2);
     const blob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
 
