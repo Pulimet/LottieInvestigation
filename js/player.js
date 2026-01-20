@@ -13,13 +13,14 @@ export function initLottie(animationData) {
     state.animation = lottie.loadAnimation({
         container: container,
         renderer: 'svg',
-        loop: true,
+        loop: state.isLooping,
         autoplay: true,
         animationData: JSON.parse(JSON.stringify(animationData))
     });
 
     state.isPlaying = true;
     updatePlayPauseIcon();
+    updateLoopButton();
     updateMetadata(animationData);
     renderLayersList(animationData.layers);
 
@@ -49,6 +50,21 @@ export function togglePlay() {
     else state.animation.play();
     state.isPlaying = !state.isPlaying;
     updatePlayPauseIcon();
+}
+
+export function toggleLoop() {
+    state.isLooping = !state.isLooping;
+    if (state.animation) {
+        state.animation.loop = state.isLooping;
+    }
+    updateLoopButton();
+}
+
+function updateLoopButton() {
+    const btn = document.getElementById('loop-btn');
+    if (!btn) return;
+    if (state.isLooping) btn.classList.add('active');
+    else btn.classList.remove('active');
 }
 
 function updatePlayPauseIcon() {

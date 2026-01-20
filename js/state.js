@@ -4,5 +4,6 @@ export const state = {
     currentFileName: 'lottie.json',
     isPlaying: false,
     totalFrames: 0,
-    isDraggingScrubber: false
+    isDraggingScrubber: false,
+    isLooping: true
 };

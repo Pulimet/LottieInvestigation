@@ -1,7 +1,7 @@
 import { state } from './state.js';
 import { fetchFileList } from './api.js';
 import { setupDragAndDrop, setupFileInput } from './file_io.js';
-import { togglePlay } from './player.js';
+import { togglePlay, toggleLoop } from './player.js';
 import { downloadExport } from './export.js';
 import { runAnalysis } from './analyze.js';
 import { runAutoFix } from './fix.js';
@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2. Playback Controls
     document.getElementById('play-pause-btn').addEventListener('click', togglePlay);
+    document.getElementById('loop-btn').addEventListener('click', toggleLoop);
 
     // Scrubber
     const scrubber = document.getElementById('scrubber');
