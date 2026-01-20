@@ -19,7 +19,7 @@ body {
     display: flex;
     justify-content: center;
     /* align-items: center; Remove to allow top alignment when scrolling */
-    padding-top: 40px;
+    padding-top: 8px;
     /* Add some top padding */
     padding-bottom: 40px;
     /* overflow: hidden; REMOVED to allow scroll */
@@ -100,6 +100,23 @@ header p {
     flex-shrink: 0;
 }
 
+.file-list-header-row {
+    display: grid;
+    grid-template-columns: 1fr 70px;
+    gap: 10px;
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.file-list-header-row span:last-child {
+    text-align: right;
+}
+
 .file-item {
     padding: 10px 12px;
     cursor: pointer;
@@ -107,9 +124,10 @@ header p {
     color: var(--text-secondary);
     border-radius: 6px;
     transition: var(--transition);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: grid;
+    grid-template-columns: 1fr 70px;
+    gap: 10px;
+    align-items: center;
 }
 
 .file-item:hover {
@@ -121,6 +139,19 @@ header p {
     background: rgba(99, 102, 241, 0.1);
     color: var(--accent);
     border-left: 2px solid var(--accent);
+}
+
+.file-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-size {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    white-space: nowrap;
+    text-align: right;
 }
 
 .layers-header {

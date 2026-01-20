@@ -21,7 +21,14 @@ const server = http.createServer((req, res) => {
         const jsonDir = path.join(__dirname, 'json');
         try {
             const files = fs.readdirSync(jsonDir)
-                .filter(file => file.toLowerCase().endsWith('.json'));
+                .filter(file => file.toLowerCase().endsWith('.json'))
+                .map(file => {
+                    const stats = fs.statSync(path.join(jsonDir, file));
+                    return {
+                        name: file,
+                        size: formatFileSize(stats.size)
+                    };
+                });
 
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(files));
@@ -56,6 +63,14 @@ const server = http.createServer((req, res) => {
         }
     });
 });
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
 
 server.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}/`);

@@ -19,17 +19,27 @@ export function fetchFileList() {
                 return;
             }
 
-            files.forEach(filename => {
+            files.forEach(file => {
                 const item = document.createElement('div');
                 item.className = 'file-item';
-                item.textContent = filename;
 
-                if (filename === state.currentFileName) {
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'file-name';
+                nameSpan.textContent = file.name;
+
+                const sizeSpan = document.createElement('span');
+                sizeSpan.className = 'file-size';
+                sizeSpan.textContent = file.size;
+
+                item.appendChild(nameSpan);
+                item.appendChild(sizeSpan);
+
+                if (file.name === state.currentFileName) {
                     item.classList.add('active');
                 }
 
                 item.addEventListener('click', () => {
-                    loadJsonFile(filename);
+                    loadJsonFile(file.name);
                 });
 
                 fileListElement.appendChild(item);
