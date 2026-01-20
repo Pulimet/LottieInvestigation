@@ -61,14 +61,15 @@ body {
 .app-container {
     width: 100%;
     max-width: 1200px;
-    height: calc(100vh - 60px);
-    /* Constrain height to viewport */
+    min-height: 100vh;
+    height: auto;
+    /* Allow growth */
     display: flex;
     flex-direction: column;
     gap: 20px;
     padding: 20px;
-    overflow: hidden;
-    /* Prevent body scroll */
+    overflow: visible;
+    /* Allow page scroll */
 }
 
 header {
@@ -101,11 +102,14 @@ header p {
 }
 
 .main-content-wrapper {
-    flex: 1;
+    height: 65vh;
+    /* Fixed height relative to viewport */
+    flex: 0 0 auto;
+    /* Don't shrink or grow */
     display: flex;
     gap: 20px;
-    min-height: 0;
-    /* Important for flex child scrolling */
+    min-height: 500px;
+    /* Minimum useful height */
     width: 100%;
 }
 
