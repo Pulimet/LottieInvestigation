@@ -35,16 +35,40 @@ body {
     display: none !important;
 }
 
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
 .app-container {
     width: 100%;
     max-width: 1200px;
-    /* height: 90vh; REMOVED fixed height */
-    min-height: 80vh;
-    /* Allow it to be at least this tall but grow */
+    height: calc(100vh - 60px);
+    /* Constrain height to viewport */
     display: flex;
     flex-direction: column;
     gap: 20px;
     padding: 20px;
+    overflow: hidden;
+    /* Prevent body scroll */
 }
 
 header {
@@ -208,6 +232,14 @@ header p {
 #files-panel.collapsed,
 #layers-panel.collapsed {
     width: 40px;
+}
+
+.layers-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--glass-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .layers-header h3 {
