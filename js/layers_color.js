@@ -41,19 +41,37 @@ export function detectShapeColor(shapes) {
     return null;
 }
 
-export function updateLayerColor(layerData, color) {
+export function updateLayerColor(layerData, color, hierarchyPath) {
     if (!state.animation || !state.animation.renderer || !state.animation.renderer.elements) return;
 
-    let renderElement = null;
-    for (let i = 0; i < state.animation.renderer.elements.length; i++) {
-        const el = state.animation.renderer.elements[i];
-        if (el && el.data && el.data.ind === layerData.ind) {
-            renderElement = el;
-            break;
+    // Helper to find render element recursively (duplicated for now to keep encapsulated)
+    function findRenderElementByPath(elements, path) {
+        if (!elements || path.length === 0) return null;
+        const currentInd = path[0];
+        let match = null;
+        for (let i = 0; i < elements.length; i++) {
+            if (elements[i] && elements[i].data && elements[i].data.ind === currentInd) {
+                match = elements[i];
+                break;
+            }
         }
+        if (!match) return null;
+        if (path.length === 1) return match;
+        if (match.elements) return findRenderElementByPath(match.elements, path.slice(1));
+        return null;
     }
 
-    if (!renderElement || !renderElement.layerElement) return;
+    let renderElement = null;
+    if (hierarchyPath && hierarchyPath.length > 0) {
+        renderElement = findRenderElementByPath(state.animation.renderer.elements, hierarchyPath);
+    } else {
+        renderElement = findRenderElementByPath(state.animation.renderer.elements, [layerData.ind]);
+    }
+
+    if (!renderElement || !renderElement.layerElement) {
+        console.warn("Could not find render element for color update", layerData.nm);
+        return;
+    }
 
     const layerGroup = renderElement.layerElement;
     const paths = layerGroup.querySelectorAll('path, text, rect, circle, ellipse, line, polyline, polygon');
@@ -67,32 +85,44 @@ export function updateLayerColor(layerData, color) {
     });
 
     if (state.currentAnimationData) {
-        const jsonLayer = state.currentAnimationData.layers.find(l => l.ind === layerData.ind);
-        if (jsonLayer) {
-            const lottieColor = hexToLottieColor(color);
-            if (jsonLayer.ty === 5 && jsonLayer.t && jsonLayer.t.d) { // Text
-                const docs = jsonLayer.t.d.k;
-                if (Array.isArray(docs)) {
-                    docs.forEach(frame => {
-                        if (frame.s) { frame.s.fc = [...lottieColor, 1]; frame.s.sc = [...lottieColor, 1]; frame.s.sw = 0; }
-                    });
-                }
+        // We need to update the correct layer in JSON. 
+        // If hierarchyPath is deep, we need to traverse assets.
+        // Or since we have layerData reference passed directly, we can just update it?
+        // Wait, updateShapesColor modifies the object in place. 
+        // layerData is the object reference from the JSON tree.
+        // So we can just use layerData directly!
+
+        // However, the original code looked it up. Let's trust layerData reference.
+
+        const lottieColor = hexToLottieColor(color);
+        if (layerData.ty === 5 && layerData.t && layerData.t.d) { // Text
+            const docs = layerData.t.d.k;
+            if (Array.isArray(docs)) {
+                docs.forEach(frame => {
+                    if (frame.s) { frame.s.fc = [...lottieColor, 1]; frame.s.sc = [...lottieColor, 1]; frame.s.sw = 0; }
+                });
             }
-            if (jsonLayer.shapes) updateShapesColor(jsonLayer.shapes, lottieColor); // Shape
-            if (jsonLayer.ty === 0 && jsonLayer.refId) { // Precomp
-                const asset = state.currentAnimationData.assets.find(a => a.id === jsonLayer.refId);
-                if (asset && asset.layers) {
-                    asset.layers.forEach(l => {
-                        if (l.shapes) updateShapesColor(l.shapes, lottieColor);
-                        if (l.ty === 5 && l.t && l.t.d) {
-                            const docs = l.t.d.k;
-                            if (Array.isArray(docs)) docs.forEach(f => { if (f.s) { f.s.fc = [...lottieColor, 1]; f.s.sc = [...lottieColor, 1]; } });
-                        }
-                    });
-                }
-            }
-            if (jsonLayer.ty === 1) jsonLayer.sc = color; // Solid
         }
+        if (layerData.shapes) updateShapesColor(layerData.shapes, lottieColor); // Shape
+
+        // For precomps, we usually don't tint the precomp container itself in JSON but the elements inside?
+        // But the user action is "Change color of this layer".
+        // If it's a precomp layer, we might want to recurse down to its asset layers?
+        // The original code did that.
+
+        if (layerData.ty === 0 && layerData.refId) { // Precomp
+            const asset = state.currentAnimationData.assets.find(a => a.id === layerData.refId);
+            if (asset && asset.layers) {
+                asset.layers.forEach(l => {
+                    if (l.shapes) updateShapesColor(l.shapes, lottieColor);
+                    if (l.ty === 5 && l.t && l.t.d) {
+                        const docs = l.t.d.k;
+                        if (Array.isArray(docs)) docs.forEach(f => { if (f.s) { f.s.fc = [...lottieColor, 1]; f.s.sc = [...lottieColor, 1]; } });
+                    }
+                });
+            }
+        }
+        if (layerData.ty === 1) layerData.sc = color; // Solid
     }
 }
 

@@ -32,6 +32,9 @@ export function renderLayersList(layers) {
             // Store a way to ID this layer? simple index isn't enough for nested.
             // We'll keep passing the object reference to the toggle function.
 
+            // Construct current path: Parent Path + Current Layer Index
+            const currentPath = [...hierarchyPath, layer.ind];
+
             // Indentation
             const paddingLeft = 12 + (level * 20); // Base 12px + 20px per level
             item.style.paddingLeft = `${paddingLeft}px`;
@@ -65,22 +68,21 @@ export function renderLayersList(layers) {
 
             item.querySelector('.visibility-btn').addEventListener('click', (e) => {
                 e.stopPropagation();
-                // We pass hierarchyPath to help locate the layer in the renderer if needed in future
-                toggleLayerVisibility(layer, item);
+                toggleLayerVisibility(layer, item, currentPath);
             });
 
             const colorInput = item.querySelector('.layer-color-picker');
             if (colorInput) {
                 colorInput.addEventListener('input', (e) => {
                     e.stopPropagation();
-                    updateLayerColor(layer, e.target.value);
+                    updateLayerColor(layer, e.target.value, currentPath);
                 });
             }
             container.appendChild(item);
 
             // Recursion for Precomps
             if (layer.ty === 0 && layer.refId && assetMap[layer.refId]) {
-                renderGroup(assetMap[layer.refId], container, level + 1);
+                renderGroup(assetMap[layer.refId], container, level + 1, currentPath);
             }
         });
     }
@@ -95,58 +97,89 @@ function getEyeIcon(visible) {
         : '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.94 17.94l-1.41 1.41-2.07-2.07c-1.42.64-3.03.96-4.96.96-4.65 0-8.65-3.26-10.5-7.5 1.15-2.64 3.39-4.78 6.09-5.96L3.06 2.73 4.47 1.32 17.94 17.94zM12 7c.2 0 .4.02.6.05L6.68 12.97c-.02-.19-.05-.39-.05-.6 0-2.92 2.7-5.32 5.37-5.37zM12 17c-1.12 0-2.16-.36-3.03-.97l2.45-2.45c.19.01.38.02.58.02 2.76 0 5-2.24 5-5 0-.2-.01-.39-.02-.58l2.45-2.45c.61.87.97 1.91.97 3.03 0 4.65-4.01 7.4-8.4 7.4z"/></svg>';
 }
 
-export function toggleLayerVisibility(layerData, itemElement) {
+export function toggleLayerVisibility(layerData, itemElement, hierarchyPath) {
     if (!state.animation || !state.animation.renderer || !state.animation.renderer.elements) {
         console.warn('Animation state not ready for visibility toggle');
         return;
     }
 
+    // New Helper: Traverse by path to strictly find the correct instance
+    function findRenderElementByPath(elements, path) {
+        if (!elements || path.length === 0) return null;
+        const currentInd = path[0];
+
+        // Find the element at this level matching the index
+        let match = null;
+        for (let i = 0; i < elements.length; i++) {
+            if (elements[i] && elements[i].data && elements[i].data.ind === currentInd) {
+                match = elements[i];
+                break;
+            }
+        }
+
+        if (!match) return null;
+
+        // If we are at the end of the path, we found it
+        if (path.length === 1) return match;
+
+        // Otherwise, recurse if it has sub-elements (Precomp)
+        if (match.elements) {
+            return findRenderElementByPath(match.elements, path.slice(1));
+        }
+
+        return null;
+    }
+
+    // Use hierarchyPath if provided to find the exact render element
     let renderElement = null;
-    for (let i = 0; i < state.animation.renderer.elements.length; i++) {
-        const el = state.animation.renderer.elements[i];
-        if (el && el.data && el.data.ind === layerData.ind) { renderElement = el; break; }
+    if (hierarchyPath && hierarchyPath.length > 0) {
+        renderElement = findRenderElementByPath(state.animation.renderer.elements, hierarchyPath);
+    } else {
+        // Fallback for top-level if path missing
+        renderElement = findRenderElementByPath(state.animation.renderer.elements, [layerData.ind]);
     }
 
     if (!renderElement) {
-        console.warn('RenderElement not found for layer:', layerData.nm);
-        return;
+        console.warn('RenderElement not found for:', layerData.nm, 'Path:', hierarchyPath);
+        // We will still update the logical state (JSON) so it saves correctly
+    } else {
+        console.log('Toggling visibility for:', layerData.nm, 'Path:', hierarchyPath);
     }
-
-    console.log('Toggling visibility for:', layerData.nm);
 
     let isNowHidden = false;
     const wasHidden = itemElement.classList.contains('hidden-layer');
 
-    // 1. Try Native Methods
-    if (typeof renderElement.hide === 'function' && typeof renderElement.show === 'function') {
-        wasHidden ? renderElement.show() : renderElement.hide();
-    }
+    // 1. Try Native Methods / DOM update if element found
+    if (renderElement) {
+        if (typeof renderElement.hide === 'function' && typeof renderElement.show === 'function') {
+            wasHidden ? renderElement.show() : renderElement.hide();
+        }
 
-    // 2. Force DOM update (Crucial fix if native methods fail to update view immediately)
-    if (renderElement.layerElement) {
-        const el = renderElement.layerElement;
-        if (wasHidden) {
-            el.style.display = 'block';
-            el.style.opacity = '1';
-            if (el.removeAttribute) el.removeAttribute('display'); // Clear any SVG attribute
-            isNowHidden = false;
+        // Force DOM update
+        if (renderElement.layerElement) {
+            const el = renderElement.layerElement;
+            if (wasHidden) {
+                el.style.display = 'block';
+                el.style.opacity = '1';
+                if (el.removeAttribute) el.removeAttribute('display');
+                isNowHidden = false;
+            } else {
+                el.style.display = 'none';
+                el.style.opacity = '0';
+                isNowHidden = true;
+            }
         } else {
-            el.style.display = 'none';
-            el.style.opacity = '0';
-            isNowHidden = true;
+            isNowHidden = !wasHidden;
         }
     } else {
-        // If no DOM element, rely on the native toggle we just did
+        // Fallback or just logical processing
         isNowHidden = !wasHidden;
     }
 
     if (!state.isPlaying && state.animation) state.animation.renderer.renderFrame(null);
 
-    // Update JSON
-    if (state.currentAnimationData) {
-        const jsonLayer = state.currentAnimationData.layers.find(l => l.ind === layerData.ind);
-        if (jsonLayer) jsonLayer.hd = isNowHidden;
-    }
+    // Update JSON model (layerData is the reference)
+    layerData.hd = isNowHidden;
 
     // Update UI
     const btn = itemElement.querySelector('.visibility-btn');
