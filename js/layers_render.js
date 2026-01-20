@@ -12,52 +12,81 @@ export function renderLayersList(layers) {
         return;
     }
 
-    layerCount.textContent = layers.length;
-
-    layers.forEach((layer, index) => {
-        const item = document.createElement('div');
-        item.className = 'layer-item';
-        item.dataset.index = index;
-
-        let iconPath = 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z';
-        switch (layer.ty) {
-            case 0: iconPath = 'M4 6H20V18H4z'; break; // Precomp
-            case 4: iconPath = 'M12 2L2 22H22L12 2z'; break; // Shape
-            case 2: iconPath = 'M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z'; break; // Image
-            case 5: iconPath = 'M5 4v3h5.5v12h3V7H19V4z'; break; // Text
-            case 3: iconPath = 'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z'; break; // Null
-        }
-
-        let colorInputHtml = '';
-        if (layer.ty === 4 || layer.ty === 5 || layer.ty === 0 || layer.ty === 1) {
-            const initialColor = detectLayerColor(layer, state.currentAnimationData) || '#ffffff';
-            colorInputHtml = `<input type="color" class="layer-color-picker" value="${initialColor}" title="Current: ${initialColor}">`;
-        }
-
-        const isHidden = layer.hd === true;
-        item.innerHTML = `
-            <svg class="layer-type-icon" viewBox="0 0 24 24" fill="currentColor"><path d="${iconPath}"/></svg>
-            <span class="layer-name" title="${layer.nm || 'Unnamed'}">${layer.nm || 'Unnamed'}</span>
-            ${colorInputHtml}
-            <button class="visibility-btn" title="Toggle Visibility">${getEyeIcon(!isHidden)}</button>
-        `;
-
-        if (isHidden) item.classList.add('hidden-layer');
-
-        item.querySelector('.visibility-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleLayerVisibility(layer, item);
+    // Build Asset Map for Precomps
+    const assetMap = {};
+    if (state.currentAnimationData && state.currentAnimationData.assets) {
+        state.currentAnimationData.assets.forEach(asset => {
+            assetMap[asset.id] = asset.layers;
         });
+    }
 
-        const colorInput = item.querySelector('.layer-color-picker');
-        if (colorInput) {
-            colorInput.addEventListener('input', (e) => {
+    let totalRenderedCount = 0;
+
+    function renderGroup(layerGroup, container, level, hierarchyPath = []) {
+        if (!layerGroup) return;
+
+        layerGroup.forEach((layer, index) => {
+            totalRenderedCount++;
+            const item = document.createElement('div');
+            item.className = 'layer-item';
+            // Store a way to ID this layer? simple index isn't enough for nested.
+            // We'll keep passing the object reference to the toggle function.
+
+            // Indentation
+            const paddingLeft = 12 + (level * 20); // Base 12px + 20px per level
+            item.style.paddingLeft = `${paddingLeft}px`;
+
+            let iconPath = 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z';
+            let typeName = 'Data';
+            switch (layer.ty) {
+                case 0: iconPath = 'M4 6H20V18H4z'; typeName = 'Precomp'; break;
+                case 1: iconPath = 'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z'; typeName = 'Solid'; break;
+                case 2: iconPath = 'M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z'; typeName = 'Image'; break;
+                case 3: iconPath = 'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z'; typeName = 'Null'; break;
+                case 4: iconPath = 'M12 2L2 22H22L12 2z'; typeName = 'Shape'; break;
+                case 5: iconPath = 'M5 4v3h5.5v12h3V7H19V4z'; typeName = 'Text'; break;
+            }
+
+            let colorInputHtml = '';
+            if (layer.ty === 4 || layer.ty === 5 || layer.ty === 0 || layer.ty === 1) {
+                const initialColor = detectLayerColor(layer, state.currentAnimationData) || '#ffffff';
+                colorInputHtml = `<input type="color" class="layer-color-picker" value="${initialColor}" title="Current: ${initialColor}">`;
+            }
+
+            const isHidden = layer.hd === true;
+            item.innerHTML = `
+                <svg class="layer-type-icon" viewBox="0 0 24 24" fill="currentColor" title="${typeName}"><path d="${iconPath}"/></svg>
+                <span class="layer-name" title="${layer.nm || typeName}">${layer.nm || typeName}</span>
+                ${colorInputHtml}
+                <button class="visibility-btn" title="Toggle Visibility">${getEyeIcon(!isHidden)}</button>
+            `;
+
+            if (isHidden) item.classList.add('hidden-layer');
+
+            item.querySelector('.visibility-btn').addEventListener('click', (e) => {
                 e.stopPropagation();
-                updateLayerColor(layer, e.target.value);
+                // We pass hierarchyPath to help locate the layer in the renderer if needed in future
+                toggleLayerVisibility(layer, item);
             });
-        }
-        layersList.appendChild(item);
-    });
+
+            const colorInput = item.querySelector('.layer-color-picker');
+            if (colorInput) {
+                colorInput.addEventListener('input', (e) => {
+                    e.stopPropagation();
+                    updateLayerColor(layer, e.target.value);
+                });
+            }
+            container.appendChild(item);
+
+            // Recursion for Precomps
+            if (layer.ty === 0 && layer.refId && assetMap[layer.refId]) {
+                renderGroup(assetMap[layer.refId], container, level + 1);
+            }
+        });
+    }
+
+    renderGroup(layers, layersList, 0);
+    layerCount.textContent = totalRenderedCount;
 }
 
 function getEyeIcon(visible) {
