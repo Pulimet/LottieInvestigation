@@ -6,6 +6,11 @@ export function runAnalysis() {
     document.getElementById('analysis-panel').classList.remove('hidden');
     const issues = analyzeAnimation(state.currentAnimationData);
     renderAnalysisReport(issues);
+
+    // Auto-scroll to results
+    requestAnimationFrame(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    });
 }
 
 export function renderAnalysisReport(issues) {
