@@ -22,6 +22,7 @@ export function fetchFileList() {
             files.forEach(file => {
                 const item = document.createElement('div');
                 item.className = 'file-item';
+                item.dataset.filename = file.name;
 
                 const nameSpan = document.createElement('span');
                 nameSpan.className = 'file-name';
@@ -55,7 +56,7 @@ export function loadJsonFile(filename) {
     // Update UI
     state.currentFileName = filename;
     document.querySelectorAll('.file-item').forEach(el => {
-        el.classList.toggle('active', el.textContent === filename);
+        el.classList.toggle('active', el.dataset.filename === filename);
     });
 
     // Fetch File
