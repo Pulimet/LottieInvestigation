@@ -66,4 +66,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('download-btn').addEventListener('click', downloadExport);
     document.getElementById('analyze-btn').addEventListener('click', runAnalysis);
     document.getElementById('fix-btn')?.addEventListener('click', runAutoFix);
+
+    // 4. Panel Folding
+    document.querySelectorAll('.fold-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const panel = e.target.closest('.glass-panel');
+            if (panel) {
+                panel.classList.toggle('collapsed');
+            }
+        });
+    });
 });
