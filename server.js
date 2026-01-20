@@ -33,7 +33,7 @@ const server = http.createServer((req, res) => {
     }
 
     // Static File Serving
-    let filePath = '.' + req.url;
+    let filePath = '.' + decodeURIComponent(req.url);
     if (filePath === './') {
         filePath = './index.html';
     }
